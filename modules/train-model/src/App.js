@@ -8,7 +8,8 @@ const { ipcRenderer } = window.require('electron')
 export default class App extends React.Component {
   constructor (props) {
     super(props)
-    this.state = { selTrain: { trainId: '' }, trains: [] }
+    this.state = { reset: false, selTrain: { trainId: '' }, trains: [] }
+    this.reset = 0
   }
 
   componentDidMount () {
@@ -16,6 +17,14 @@ export default class App extends React.Component {
       this.setState({ selTrain: arg.sel, trains: arg.trains })
     })
     this.intervalId = setInterval(() => { ipcRenderer.send('requestData') }, 1000 / updateRate)
+    if (!testUI) { // This block is for demonstration only
+      ipcRenderer.send('createTrain', true)
+      ipcRenderer.send('setClock', true)
+    }
+    ipcRenderer.on('resetOverview', (event, arg) => {
+      this.reset += 1
+      ipcRenderer.send('reset', true)
+    })
   }
 
   componentWillUnmount () {
@@ -24,11 +33,10 @@ export default class App extends React.Component {
   }
 
   render () {
-    const header = testUI ? <TestHeader /> : ''
     return (
       <>
-        {header}
-        <Tabs defaultActiveKey='overview' className='mb-3'>
+        {testUI ? <TestHeader /> : ''}
+        <Tabs defaultActiveKey='overview' key={this.reset}>
           <Tab eventKey='overview' title='Overview'>
             <Overview trains={this.state.trains} />
           </Tab>

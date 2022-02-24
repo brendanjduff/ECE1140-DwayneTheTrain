@@ -1,5 +1,6 @@
 import React from 'react'
-import { Card, Row, Col, InputGroup, FormControl, Form } from 'react-bootstrap'
+import { Card, Row, Col, InputGroup, Form } from 'react-bootstrap'
+import { toKilo } from './UnitConversion'
 import SmartTextInput from './SmartTextInput'
 const { ipcRenderer } = window.require('electron')
 
@@ -16,8 +17,8 @@ export default class InputCardTrainController extends React.Component {
               </Col>
               <Col xs={6} className='noVertical'>
                 <InputGroup size='sm' style={{ padding: 1 + 'px' }}>
-                  <SmartTextInput default={this.props.train.inputPower} channel='setPower' validate={new RegExp('^([0-9]*(\.([0-9])+)?)$')} />
-                  <InputGroup.Text>μW</InputGroup.Text>
+                  <SmartTextInput default={toKilo(this.props.io.powerCmd).toFixed(0)} channel='setPower' validate={/^([0-9]{1,3})$/} />
+                  <InputGroup.Text>kW</InputGroup.Text>
                 </InputGroup>
               </Col>
             </Row>
@@ -26,8 +27,8 @@ export default class InputCardTrainController extends React.Component {
                 E-Brake
               </Col>
               <Col xs={6} className='noVertical'>
-                <Form>
-                  <Form.Check type='switch' defaultChecked={this.props.train.inputEBrake} onChange={e => { ipcRenderer.send('setEmergencyBrake', e.target.checked) }} />
+                <Form key={this.props.io.emergencyBrake}>
+                  <Form.Check type='switch' defaultChecked={this.props.io.emergencyBrake} onChange={e => { ipcRenderer.send('setEmergencyBrake', e.target.checked) }} />
                 </Form>
               </Col>
             </Row>
@@ -37,7 +38,7 @@ export default class InputCardTrainController extends React.Component {
               </Col>
               <Col xs={6} className='noVertical'>
                 <Form>
-                  <Form.Check type='switch' defaultChecked={this.props.train.inputSBrake} onChange={e => { ipcRenderer.send('setServiceBrake', e.target.checked) }} />
+                  <Form.Check type='switch' defaultChecked={this.props.io.serviceBrake} onChange={e => { ipcRenderer.send('setServiceBrake', e.target.checked) }} />
                 </Form>
               </Col>
             </Row>
@@ -47,8 +48,8 @@ export default class InputCardTrainController extends React.Component {
               </Col>
               <Col xs={6} className='noVertical'>
                 <Form>
-                  <Form.Check type='checkbox' inline label='Left' defaultChecked={this.props.train.inputLeftDoors} onChange={e => { ipcRenderer.send('setLeftDoors', e.target.checked) }} />
-                  <Form.Check type='checkbox' inline label='Right' defaultChecked={this.props.train.inputRightDoors} onChange={e => { ipcRenderer.send('setRightDoors', e.target.checked) }} />
+                  <Form.Check type='checkbox' inline label='Left' defaultChecked={this.props.io.leftDoors} onChange={e => { ipcRenderer.send('setLeftDoors', e.target.checked) }} />
+                  <Form.Check type='checkbox' inline label='Right' defaultChecked={this.props.io.rightDoors} onChange={e => { ipcRenderer.send('setRightDoors', e.target.checked) }} />
                 </Form>
               </Col>
             </Row>
@@ -58,7 +59,7 @@ export default class InputCardTrainController extends React.Component {
               </Col>
               <Col xs={6} className='noVertical'>
                 <Form>
-                  <Form.Check type='switch' defaultChecked={this.props.train.inputLights} onChange={e => { ipcRenderer.send('setLights', e.target.checked) }} />
+                  <Form.Check type='switch' defaultChecked={this.props.io.lights} onChange={e => { ipcRenderer.send('setLights', e.target.checked) }} />
                 </Form>
               </Col>
             </Row>
@@ -68,7 +69,7 @@ export default class InputCardTrainController extends React.Component {
               </Col>
               <Col xs={6} className='noVertical'>
                 <InputGroup size='sm' style={{ padding: 1 + 'px' }}>
-                  <SmartTextInput default={this.props.train.inputTemp} channel='setTemperature' validate={new RegExp('^([0-9]{2})$')} />
+                  <SmartTextInput default={this.props.io.temperature} channel='setTemperature' validate={/^([0-9]{2})$/} />
                   <InputGroup.Text>°F</InputGroup.Text>
                 </InputGroup>
               </Col>

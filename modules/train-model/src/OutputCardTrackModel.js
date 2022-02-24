@@ -9,9 +9,9 @@ export default class OutputCardTrackModel extends React.Component {
         <Card.Body>
           <Card.Title>Track Model Outputs</Card.Title>
           <Card.Text>
-            <span className='bold'>Dist. Travelled:</span> {mToFt(this.props.train.outputDistanceTravelled).toFixed(2)} ft <br />
-            <span className='bold'>Open Pax. Cap:</span> {this.props.train.outputOpenPaxCap} persons <br />
-            <span className='bold'>Deboarding Pax.:</span> {this.props.train.outputDeboardingPax} persons <br />
+            <strong>Δdistance:</strong> {mToFt(this.props.io.distance).toFixed(2)} ft <br />
+            <strong>Max Boarding Pax.:</strong> {this.props.io.maxBoardingPax} persons <br />
+            <strong>Deboarding Pax.:</strong> {this.props.io.deboardingPax} persons <br />
           </Card.Text>
         </Card.Body>
       </Card>

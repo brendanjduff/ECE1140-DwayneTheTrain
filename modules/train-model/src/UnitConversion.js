@@ -16,6 +16,14 @@ export function mToFt (value) {
   return value * 3.2808
 }
 
+export function toKilo (value) {
+  return value / 1000
+}
+
 export function mphToMs (value) {
   return value / 2.2369
+}
+
+export function fromKilo (value) {
+  return value * 1000
 }

@@ -1,4 +1,5 @@
-import { mphToMs } from './UnitConversion'
+import { mphToMs, fromKilo } from './UnitConversion'
+import TrainModel from './TrainModel'
 const { app, BrowserWindow, ipcMain } = require('electron')
 const isDev = require('electron-is-dev')
 
@@ -65,125 +66,18 @@ const trainsList = []
 const trainsDict = []
 let nextId = 1
 
-class Train {
-  constructor () {
-    // State of Train
-    this.trainId = nextId
-    this.authority = 0 // blocks
-    this.velocity = 0 // m/s
-    this.speedCmd = 0 // m/s
-    this.acceleration = 0 // m/s^2
-    this.power = 0 // Watts
-    this.leftDoorsOpen = false
-    this.rightDoorsOpen = false
-    this.lightsOn = false
-    this.temp = 68 // Fahrenheit
-    this.stationName = ''
-    this.rightPlatform = false
-    this.leftPlatform = false
-    this.underground = false
-    this.crew = 0
-    this.passengers = 0
-    this.maxPassengers = 222
-    this.engineFailure = false
-    this.brakeFailure = false
-    this.signalFailure = false
-    this.length = 32.2 // m
-    this.height = 3.42 // m
-    this.width = 2.65 // m
-    this.baseMass = 41550 // kg
-    this.paxMass = 72.5 // kg
-
-    // Inputs
-    this.inputPower = 0
-    this.inputTemp = 68
-    this.inputRightDoors = false
-    this.inputLeftDoors = false
-    this.inputLights = false
-    this.inputEBrake = false
-    this.inputSBrake = false
-    this.inputSpeedCmd = 0
-    this.inputAuthority = 0
-    this.inputStationName = ''
-    this.inputRightPlatform = false
-    this.inputLeftPlatform = false
-    this.inputUnderground = false
-    this.inputBoardingPax = 0
-    this.inputEngineFailure = false
-    this.inputBrakeFailure = false
-    this.inputSignalFailure = false
-
-    // Outputs
-    this.outputSpeedCmd = 0
-    this.outputAuthorityCmd = 0
-    this.outputStationName = ''
-    this.outputRightPlatform = false
-    this.outputLeftPlatform = false
-    this.outputUnderground = false
-    this.outputDistanceTravelled = 0
-    this.outputOpenPaxCap = 0
-    this.outputDeboardingPax = 0
-  }
-
-  update (dt) {
-    // Failure Modes
-    this.engineFailure = this.inputEngineFailure
-    this.brakeFailure = this.inputBrakeFailure
-    this.signalFailure = this.inputSignalFailure
-
-    // Inputs
-    this.power = this.inputPower
-    this.leftDoorsOpen = this.inputLeftDoors
-    this.rightDoorsOpen = this.inputRightDoors
-    this.lightsOn = this.inputLights
-    this.temp = this.inputTemp
-    this.speedCmd = this.inputSpeedCmd
-    this.authority = this.inputAuthority
-    this.stationName = this.inputStationName
-    this.rightPlatform = this.inputRightPlatform
-    this.leftPlatform = this.inputLeftPlatform
-    this.underground = this.inputUnderground
-    // boarding pax
-
-    // Train Motion
-    const lastA = this.acceleration
-    const lastV = this.velocity
-    const mass = this.baseMass + (this.paxMass * this.passengers)
-    if (this.inputEBrake) {
-      this.acceleration = -2.73
-    } else if (this.inputSBrake) {
-      this.acceleration = -1.2
-    } else {
-      this.acceleration = (lastV > 0 ? (this.power / lastV * mass) : 0.5)
-    }
-    this.acceleration = (this.acceleration > 0.5 ? 0.5 : this.acceleration)
-    this.velocity = lastV + (dt / 2) * (this.acceleration + lastA)
-    this.velocity = (this.velocity < 0 ? 0 : this.velocity)
-
-    // Outputs
-    this.outputSpeedCmd = this.outputSpeedCmd
-    this.outputAuthorityCmd = this.authority
-    this.outputStationName = this.stationName
-    this.outputRightPlatform = this.rightPlatform
-    this.outputLeftPlatform = this.leftPlatform
-    this.outputUnderground = this.Underground
-    this.outputDistanceTravelled = this.velocity * dt
-    this.outputOpenPaxCap = this.maxPassengers - this.passengers
-    // deboarding pax
-  }
-}
-
 // System Management
-let selectedTrain = 1
+let selTrainId = 1
 let enableClock = false
 let simulationTime = 0
 let timeMultiplier = 1
 let lastTime = Date.now() / 1000
+const simHz = 120
 
 function updateTrains () {
   const now = Date.now() / 1000
   const dt = (now - lastTime) * timeMultiplier
-  if(dt > 0.25) {
+  if (dt > 0.1) {
     if (enableClock) {
       simulationTime += dt
       trainsList.forEach(t => { t.update(dt) })
@@ -192,19 +86,19 @@ function updateTrains () {
   }
 }
 
-setInterval(() => { updateTrains() }, 10)
+setInterval(() => { updateTrains() }, 1000 / simHz)
 
 // General IPC
 ipcMain.on('requestData', (event, arg) => {
-  event.reply('fetchData', { sel: trainsDict[selectedTrain], trains: trainsList })
+  event.reply('fetchData', { sel: trainsDict[selTrainId], trains: trainsList })
 })
 
 ipcMain.on('selectTrain', (event, arg) => {
-  selectedTrain = arg
+  selTrainId = arg
 })
 
 ipcMain.on('createTrain', (event, arg) => {
-  const newTrain = new Train()
+  const newTrain = new TrainModel(nextId)
   nextId += 1
   trainsList.push(newTrain)
   trainsDict[newTrain.trainId] = newTrain
@@ -218,19 +112,44 @@ ipcMain.on('requestTiming', (event, arg) => {
   event.reply('fetchTiming', { clock: enableClock, mult: timeMultiplier, time: simulationTime })
 })
 
+ipcMain.on('requestReset', (event, arg) => {
+  event.reply('resetOverview', true)
+})
+
+ipcMain.on('reset', (event, arg) => {
+  trainsList.length = 0
+  trainsDict.length = 0
+  nextId = 1
+  selTrainId = 1
+  enableClock = false
+  simulationTime = 0
+  timeMultiplier = 1
+  lastTime = Date.now() / 1000
+})
+
 // Train Update IPC
-ipcMain.on('setEngineFailure', (event, arg) => { trainsDict[selectedTrain].inputEngineFailure = arg })
-ipcMain.on('setBrakeFailure', (event, arg) => { trainsDict[selectedTrain].inputBrakeFailure = arg })
-ipcMain.on('setSignalFailure', (event, arg) => { trainsDict[selectedTrain].inputSignalFailure = arg })
-ipcMain.on('setPower', (event, arg) => { trainsDict[selectedTrain].inputPower = arg / 1000000 })
-ipcMain.on('setEmergencyBrake', (event, arg) => { trainsDict[selectedTrain].inputEBrake = arg })
-ipcMain.on('setServiceBrake', (event, arg) => { trainsDict[selectedTrain].inputSBrake = arg })
-ipcMain.on('setLeftDoors', (event, arg) => { trainsDict[selectedTrain].inputLeftDoors = arg })
-ipcMain.on('setRightDoors', (event, arg) => { trainsDict[selectedTrain].inputRightDoors = arg })
-ipcMain.on('setLights', (event, arg) => { trainsDict[selectedTrain].inputLights = arg })
-ipcMain.on('setTemperature', (event, arg) => { trainsDict[selectedTrain].inputTemp = arg })
-ipcMain.on('setSpeedCmd', (event, arg) => { trainsDict[selectedTrain].inputSpeedCmd = mphToMs(arg) })
-ipcMain.on('setAuthority', (event, arg) => { trainsDict[selectedTrain].inputAuthority = arg })
+ipcMain.on('setEngineFailure', (event, arg) => { trainsDict[selTrainId].user.engineFailure = arg })
+ipcMain.on('setBrakeFailure', (event, arg) => { trainsDict[selTrainId].user.brakeFailure = arg })
+ipcMain.on('setSignalFailure', (event, arg) => { trainsDict[selTrainId].user.signalFailure = arg })
+ipcMain.on('setPower', (event, arg) => { trainsDict[selTrainId].ctrllr.inputs.powerCmd = fromKilo(arg) })
+ipcMain.on('setEmergencyBrake', (event, arg) => { trainsDict[selTrainId].ctrllr.inputs.emergencyBrake = arg })
+ipcMain.on('setServiceBrake', (event, arg) => { trainsDict[selTrainId].ctrllr.inputs.serviceBrake = arg })
+ipcMain.on('setLeftDoors', (event, arg) => { trainsDict[selTrainId].ctrllr.inputs.leftDoors = arg })
+ipcMain.on('setRightDoors', (event, arg) => { trainsDict[selTrainId].ctrllr.inputs.rightDoors = arg })
+ipcMain.on('setLights', (event, arg) => { trainsDict[selTrainId].ctrllr.inputs.lights = arg })
+ipcMain.on('setTemperature', (event, arg) => { trainsDict[selTrainId].ctrllr.inputs.temperature = arg })
+ipcMain.on('setSpeedCmd', (event, arg) => { trainsDict[selTrainId].track.inputs.speedCmd = mphToMs(arg) })
+ipcMain.on('setAuthority', (event, arg) => { trainsDict[selTrainId].track.inputs.authorityCmd = arg })
+ipcMain.on('setBeacon', (event, arg) => {
+  trainsDict[selTrainId].track.inputs.station = arg.station
+  trainsDict[selTrainId].track.inputs.leftPlatform = arg.leftPlatform
+  trainsDict[selTrainId].track.inputs.rightPlatform = arg.rightPlatform
+  trainsDict[selTrainId].track.inputs.underground = arg.underground
+})
+ipcMain.on('setPassengers', (event, arg) => {
+  trainsDict[selTrainId].track.inputs.boardingPax = Math.round(arg)
+  trainsDict[selTrainId].procPassengers()
+})
 
 // FOR DEBUGGING ONLY
 ipcMain.on('null', (event, arg) => { console.log('A component is passing messages on the wrong channel') })

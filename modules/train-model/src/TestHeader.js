@@ -1,5 +1,5 @@
 import React from 'react'
-import { Row, Col, Button, InputGroup, FormControl } from 'react-bootstrap'
+import { Row, Col, Button, InputGroup } from 'react-bootstrap'
 import SmartTextInput from './SmartTextInput'
 const { ipcRenderer } = window.require('electron')
 
@@ -37,14 +37,17 @@ export default class TestHeader extends React.Component {
         <Col xs='auto'>
           <InputGroup size='sm' style={{ marginTop: 5 + 'px' }}>
             <InputGroup.Text>Clock Speed </InputGroup.Text>
-            <SmartTextInput default={this.state.mult} channel='setMult' validate={new RegExp('^(([1-5]{1}?[0-9]{1})|(60)|[1-9]{1}|(([0-9]{1})?\.[0-9]))$')} style={{ textAlign: 'right', width: 50 + 'px'}}/>
+            <SmartTextInput default={this.state.mult} channel='setMult' validate={/^(([1-5]{1}?[0-9]{1})|(60)|[1-9]{1}|(([0-9]{1})?[.][0-9]))$/} style={{ textAlign: 'right', width: 50 + 'px' }} />
             <InputGroup.Text>x</InputGroup.Text>
           </InputGroup>
         </Col>
         <Col xs='auto'>
-          <p style={{ marginTop: 7 + 'px' }}><span className='bold'>Time: </span>{
-          Math.floor(this.state.time / 60)}:{
-          (this.state.time % 60).toFixed(1).padStart(4, '0')}</p>
+          <p style={{ marginTop: 7 + 'px' }}><span className='bold'>Time: </span>{Math.floor(this.state.time / 3600)}:{(Math.floor(this.state.time / 60) % 60).toFixed(0).padStart(2, '0')}:{(this.state.time % 60).toFixed(1).padStart(4, '0')} </p>
+        </Col>
+        <Col xs='auto'>
+          <Button variant='warning' size='sm' style={{ marginBottom: 10 + 'px' }} onClick={() => ipcRenderer.send('requestReset', true)}>
+            Reset Simulation
+          </Button>
         </Col>
       </Row>
     )

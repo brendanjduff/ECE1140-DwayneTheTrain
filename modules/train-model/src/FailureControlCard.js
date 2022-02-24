@@ -2,11 +2,7 @@ import React from 'react'
 import { Row, Col, Card, Form } from 'react-bootstrap'
 const { ipcRenderer } = window.require('electron')
 
-export default class FailureControls extends React.Component {
-  constructor (props) {
-    super(props)
-  }
-
+export default class FailureControlCard extends React.Component {
   render () {
     return (
       <Card>
@@ -19,7 +15,7 @@ export default class FailureControls extends React.Component {
                   Engine
                 </Col>
                 <Col xs={6} className='noVertical'>
-                  <Form.Check type='switch' defaultChecked={this.props.train.inputEngineFailure} onChange={e => { ipcRenderer.send('setEngineFailure', e.target.checked) }} />
+                  <Form.Check type='switch' defaultChecked={this.props.user.engineFailure} onChange={e => { ipcRenderer.send('setEngineFailure', e.target.checked) }} />
                 </Col>
               </Row>
               <Row className='noVertical'>
@@ -27,7 +23,7 @@ export default class FailureControls extends React.Component {
                   Brakes
                 </Col>
                 <Col xs={6} className='noVertical'>
-                  <Form.Check type='switch' defaultChecked={this.props.train.inputBrakeFailure} onChange={e => { ipcRenderer.send('setBrakeFailure', e.target.checked) }} />
+                  <Form.Check type='switch' defaultChecked={this.props.user.brakeFailure} onChange={e => { ipcRenderer.send('setBrakeFailure', e.target.checked) }} />
                 </Col>
               </Row>
               <Row className='noVertical'>
@@ -35,7 +31,7 @@ export default class FailureControls extends React.Component {
                   Signal Pickup
                 </Col>
                 <Col xs={6} className='noVertical'>
-                  <Form.Check type='switch' defaultChecked={this.props.train.inputSignalFailure} onChange={e => { ipcRenderer.send('setSignalFailure', e.target.checked) }} />
+                  <Form.Check type='switch' defaultChecked={this.props.user.signalFailure} onChange={e => { ipcRenderer.send('setSignalFailure', e.target.checked) }} />
                 </Col>
               </Row>
             </Card.Text>
