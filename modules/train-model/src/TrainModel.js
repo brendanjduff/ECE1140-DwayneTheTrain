@@ -87,15 +87,14 @@ export default class TrainModel {
     this.state.temperature = this.ctrllr.inputs.temperature
 
     // Read inputs from track model
-    // Boarding Pax
     if (this.state.signalPickup) {
       this.thru.speedCmd = this.track.inputs.speedCmd
       this.thru.authorityCmd = this.track.inputs.authorityCmd
-      this.thru.station = this.track.inputs.station
-      this.thru.rightPlatform = this.track.inputs.rightPlatform
-      this.thru.leftPlatform = this.track.inputs.leftPlatform
-      this.thru.underground = this.track.inputs.underground
     }
+    this.thru.station = this.track.inputs.station
+    this.thru.rightPlatform = this.track.inputs.rightPlatform
+    this.thru.leftPlatform = this.track.inputs.leftPlatform
+    this.thru.underground = this.track.inputs.underground
 
     // Read inputs from user
     this.state.engineStatus = !this.user.engineFailure

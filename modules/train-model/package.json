@@ -1,5 +1,5 @@
 {
-  "name": "train-model",
+  "name": "train-model-dev",
   "version": "0.1.1",
   "author": "Brendan Duff",
   "description": "Simulates train behavior.",
@@ -20,7 +20,7 @@
         {
           "name": "@electron-forge/maker-squirrel",
           "config": {
-            "name": "my_app"
+            "name": "train-model-dev"
           }
         },
         {
