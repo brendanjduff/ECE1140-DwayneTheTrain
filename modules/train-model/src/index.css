@@ -1,0 +1,43 @@
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica,
+    Arial, sans-serif;
+  margin: 5px;
+}
+
+Table {
+  table-layout: auto;
+  margin: 5px;
+  width: 100px;
+}
+
+th {
+  text-align: left;
+  vertical-align: text-top;
+  text-justify: top
+}
+
+td {
+  text-align: left;
+}
+
+.card {
+  margin-top: 2px;
+  margin-bottom: 2px;
+  margin-left: 0px;
+  margin-right: 0px;
+}
+
+Button {
+  margin: 5px;
+}
+
+.noVertical {
+  padding-top: 0px;
+  padding-bottom: 0px;
+  margin-top: 0px;
+  margin-bottom: 0px;
+}
+
+::-webkit-scrollbar {
+  display: none;
+}
