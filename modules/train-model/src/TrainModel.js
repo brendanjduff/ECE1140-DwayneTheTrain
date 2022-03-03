@@ -112,17 +112,20 @@ export default class TrainModel {
     const lastA = this.state.acceleration
     const lastV = this.state.velocity
 
-    if (this.state.engineStatus && !this.state.emergencyBrake && !this.state.serviceBrake) {
-      this.state.power = Math.min(this.state.power + ((this.vehicle.maxPower * dt) / motorStartingTime), this.state.powerCmd, this.vehicle.maxPower)
-    } else {
-      this.state.power = 0
-    }
 
     if (this.state.emergencyBrake && this.state.brakeStatus) {
       this.state.acceleration = this.vehicle.ebrakeAcc
+      this.state.power = 0
     } else if (this.state.serviceBrake && this.state.brakeStatus) {
       this.state.acceleration = this.vehicle.sbrakeAcc
+      this.state.power = 0
     } else {
+      if(this.state.engineStatus) {
+        this.state.power = Math.min(this.state.power + ((this.vehicle.maxPower * dt) / motorStartingTime), this.state.powerCmd, this.vehicle.maxPower)
+      } else {
+        this.state.power = 0
+      }
+
       const mass = this.vehicle.mass + (paxMass * (this.state.passengers + this.state.crew))
       const N = mass * g // normal force
       const maxTractiveEffort = u * N
@@ -131,15 +134,18 @@ export default class TrainModel {
       const gradeResistance = this.phys.grade * N
       const Af = this.vehicle.width * this.vehicle.height
       const fAero = 0.5 * rho * Cd * Af * lastV * lastV
-      const resistiveForces = rollingFriction + gradeResistance + fAero
-      const totalForces = Math.min(motorForce, maxTractiveEffort) - resistiveForces
+      const resistiveForce = rollingFriction + gradeResistance + fAero
+      const totalForce = Math.min(motorForce, maxTractiveEffort) - resistiveForce
 
-      this.state.acceleration = totalForces / mass
+      this.state.acceleration = Math.min(totalForce / mass, this.vehicle.maxAcc)
     }
     if(this.state.velocity < 1e-5 && this.state.acceleration < 0) {
       this.state.acceleration = 0
     }
-    this.state.velocity = Math.max(/* Math.min( */lastV + (dt / 2) * (this.state.acceleration + lastA)/*, this.vehicle.maxVel) */, 0)
+    this.state.velocity = Math.max(Math.min( lastV + (dt / 2) * (this.state.acceleration + lastA), this.vehicle.maxVel), 0)
+    if(this.state.velocity >= this.vehicle.maxVel - 1e-5) {
+      this.state.acceleration = 0
+    }
   }
 
   procOutputs (dt) {
