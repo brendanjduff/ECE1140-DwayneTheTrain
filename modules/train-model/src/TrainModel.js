@@ -25,7 +25,7 @@ export default class TrainModel {
       signalFailure: false, // true: failure
       emergencyBrake: false
     }
-    this.ctrllr = {
+    this.controllerIntf = {
       inputs: {
         powerCmd: 0, // W
         emergencyBrake: false,
@@ -45,7 +45,7 @@ export default class TrainModel {
         underground: false
       }
     }
-    this.track = {
+    this.trackIntf = {
       inputs: {
         boardingPax: 0,
         speedCmd: 0,
@@ -53,7 +53,8 @@ export default class TrainModel {
         station: '',
         rightPlatform: false,
         leftPlatform: false,
-        underground: false
+        underground: false,
+        grade: 0
       },
       outputs: {
         distance: 0,
@@ -69,6 +70,9 @@ export default class TrainModel {
       leftPlatform: false,
       underground: false
     }
+    this.phys = {
+      grade: 0
+    }
   }
 
   update (dt) {
@@ -79,23 +83,24 @@ export default class TrainModel {
 
   procInputs () {
     // Read inputs from train controller
-    this.state.powerCmd = this.ctrllr.inputs.powerCmd
-    this.state.emergencyBrake = this.ctrllr.inputs.emergencyBrake || this.user.emergencyBrake
-    this.state.serviceBrake = this.ctrllr.inputs.serviceBrake
-    this.state.leftDoors = this.ctrllr.inputs.leftDoors
-    this.state.rightDoors = this.ctrllr.inputs.rightDoors
-    this.state.lights = this.ctrllr.inputs.lights
-    this.state.temperature = this.ctrllr.inputs.temperature
+    this.state.powerCmd = this.controllerIntf.inputs.powerCmd
+    this.state.emergencyBrake = this.controllerIntf.inputs.emergencyBrake || this.user.emergencyBrake
+    this.state.serviceBrake = this.controllerIntf.inputs.serviceBrake
+    this.state.leftDoors = this.controllerIntf.inputs.leftDoors
+    this.state.rightDoors = this.controllerIntf.inputs.rightDoors
+    this.state.lights = this.controllerIntf.inputs.lights
+    this.state.temperature = this.controllerIntf.inputs.temperature
 
     // Read inputs from track model
+    this.phys.grade = this.trackIntf.inputs.grade
     if (this.state.signalPickup) {
-      this.thru.speedCmd = this.track.inputs.speedCmd
-      this.thru.authorityCmd = this.track.inputs.authorityCmd
+      this.thru.speedCmd = this.trackIntf.inputs.speedCmd
+      this.thru.authorityCmd = this.trackIntf.inputs.authorityCmd
     }
-    this.thru.station = this.track.inputs.station
-    this.thru.rightPlatform = this.track.inputs.rightPlatform
-    this.thru.leftPlatform = this.track.inputs.leftPlatform
-    this.thru.underground = this.track.inputs.underground
+    this.thru.station = this.trackIntf.inputs.station
+    this.thru.rightPlatform = this.trackIntf.inputs.rightPlatform
+    this.thru.leftPlatform = this.trackIntf.inputs.leftPlatform
+    this.thru.underground = this.trackIntf.inputs.underground
 
     // Read inputs from user
     this.state.engineStatus = !this.user.engineFailure
@@ -118,34 +123,44 @@ export default class TrainModel {
     } else if (this.state.serviceBrake && this.state.brakeStatus) {
       this.state.acceleration = this.vehicle.sbrakeAcc
     } else {
+      const mass = this.vehicle.mass + (paxMass * (this.state.passengers + this.state.crew))
+      const N = mass * g // normal force
+      const maxTractiveEffort = u * N
+      const motorForce = this.state.power / Math.max(lastV, 1)
+      const rollingFriction = Crr * N
+      const gradeResistance = this.phys.grade * N
       const Af = this.vehicle.width * this.vehicle.height
       const fAero = 0.5 * rho * Cd * Af * lastV * lastV
-      const mass = this.vehicle.mass + (paxMass * (this.state.passengers + this.state.crew))
-      const fFriction = mu * mass
-      this.state.acceleration = /* Math.min( */(((this.state.power / Math.max(lastV, 1)) - fAero - fFriction) / (mass))/*, /*this.vehicle.maxAcc) */
+      const resistiveForces = rollingFriction + gradeResistance + fAero
+      const totalForces = Math.min(motorForce, maxTractiveEffort) - resistiveForces
+
+      this.state.acceleration = totalForces / mass
+    }
+    if(this.state.velocity < 1e-5 && this.state.acceleration < 0) {
+      this.state.acceleration = 0
     }
     this.state.velocity = Math.max(/* Math.min( */lastV + (dt / 2) * (this.state.acceleration + lastA)/*, this.vehicle.maxVel) */, 0)
   }
 
   procOutputs (dt) {
     // Write outputs to train controller
-    this.ctrllr.outputs.velocity = this.state.velocity
-    this.ctrllr.outputs.speedCmd = this.thru.speedCmd
-    this.ctrllr.outputs.authorityCmd = this.thru.authorityCmd
-    this.ctrllr.outputs.station = this.thru.station
-    this.ctrllr.outputs.rightPlatform = this.thru.rightPlatform
-    this.ctrllr.outputs.leftPlatform = this.thru.leftPlatform
-    this.ctrllr.outputs.underground = this.thru.underground
+    this.controllerIntf.outputs.velocity = this.state.velocity
+    this.controllerIntf.outputs.speedCmd = this.thru.speedCmd
+    this.controllerIntf.outputs.authorityCmd = this.thru.authorityCmd
+    this.controllerIntf.outputs.station = this.thru.station
+    this.controllerIntf.outputs.rightPlatform = this.thru.rightPlatform
+    this.controllerIntf.outputs.leftPlatform = this.thru.leftPlatform
+    this.controllerIntf.outputs.underground = this.thru.underground
 
     // Write outputs to track model
-    this.track.outputs.distance = this.state.velocity * dt
+    this.trackIntf.outputs.distance = this.state.velocity * dt
   }
 
   procPassengers () {
     if (((this.thru.leftPlatform && this.state.leftDoors) || (this.thru.rightPlatform && this.state.rightDoors)) && this.state.velocity === 0) {
-      this.state.passengers = Math.min(this.state.passengers - this.track.outputs.deboardingPax + this.track.inputs.boardingPax, this.vehicle.paxCap)
-      this.track.outputs.deboardingPax = Math.floor(Math.random() * this.state.passengers)
-      this.track.outputs.maxBoardingPax = this.vehicle.paxCap - this.state.passengers + this.track.outputs.deboardingPax
+      this.state.passengers = Math.min(this.state.passengers - this.trackIntf.outputs.deboardingPax + this.trackIntf.inputs.boardingPax, this.vehicle.paxCap)
+      this.trackIntf.outputs.deboardingPax = Math.floor(Math.random() * this.state.passengers)
+      this.trackIntf.outputs.maxBoardingPax = this.vehicle.paxCap - this.state.passengers + this.trackIntf.outputs.deboardingPax
     }
   }
 }
@@ -164,8 +179,11 @@ const blackpoolFlexity2 = {
   paxCap: 222
 }
 
-const Cd = 1.8
-const rho = 1.225 // kg/m^3
-const motorStartingTime = 4 // seconds to reach full power
+// Constants used in physics calculations
 const paxMass = 80 // kg
-const mu = 0.5 // coefficient of friction between steel wheels and rails
+const g = 9.81 // m/s^2
+const motorStartingTime = 4 // seconds to reach full power
+const Crr = 0.0016 // Rolling resistance coefficient
+const Cd = 1.8 // drag coefficient for train
+const rho = 1.225 // density of air, kg/m^3
+const u = 0.5 // coefficient of static friction between steel wheels and rails

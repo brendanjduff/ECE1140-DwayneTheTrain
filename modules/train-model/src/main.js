@@ -77,14 +77,14 @@ ipcMain.on('setBrakeFailure', (event, arg) => { trainsDict[selTrainId].user.brak
 ipcMain.on('setSignalFailure', (event, arg) => { trainsDict[selTrainId].user.signalFailure = arg })
 ipcMain.on('setEmergencyBrakePax', (event, arg) => { trainsDict[selTrainId].user.emergencyBrake = arg })
 
-function createTrain () {
+function createTrain() {
   const newTrain = new TrainModel(nextId)
   nextId += 1
   trainsList.push(newTrain)
   trainsDict[newTrain.trainId] = newTrain
 }
 
-if (testMode) {
+if (testMode) { 
   let enableClock = false
   let simulationTime = 0
   let timeMultiplier = 1
@@ -106,19 +106,19 @@ if (testMode) {
   setInterval(() => { updateTrains() }, 1000 / simHz)
 
   ipcMain.on('createTrain', (event, arg) => { createTrain() })
-
+  
   ipcMain.on('setClock', (event, arg) => { enableClock = arg })
-
+  
   ipcMain.on('setMult', (event, arg) => { timeMultiplier = arg })
-
+  
   ipcMain.on('requestTiming', (event, arg) => {
     event.reply('fetchTiming', { clock: enableClock, mult: timeMultiplier, time: simulationTime })
   })
-
+  
   ipcMain.on('requestReset', (event, arg) => {
     event.reply('resetOverview', true)
   })
-
+  
   ipcMain.on('reset', (event, arg) => {
     trainsList.length = 0
     trainsDict.length = 0
@@ -129,25 +129,26 @@ if (testMode) {
     timeMultiplier = 1
     lastTime = Date.now() / 1000
   })
-
+  
   // Train Update Test IPC
-  ipcMain.on('setPower', (event, arg) => { trainsDict[selTrainId].ctrllr.inputs.powerCmd = fromKilo(arg) })
-  ipcMain.on('setEmergencyBrake', (event, arg) => { trainsDict[selTrainId].ctrllr.inputs.emergencyBrake = arg })
-  ipcMain.on('setServiceBrake', (event, arg) => { trainsDict[selTrainId].ctrllr.inputs.serviceBrake = arg })
-  ipcMain.on('setLeftDoors', (event, arg) => { trainsDict[selTrainId].ctrllr.inputs.leftDoors = arg })
-  ipcMain.on('setRightDoors', (event, arg) => { trainsDict[selTrainId].ctrllr.inputs.rightDoors = arg })
-  ipcMain.on('setLights', (event, arg) => { trainsDict[selTrainId].ctrllr.inputs.lights = arg })
-  ipcMain.on('setTemperature', (event, arg) => { trainsDict[selTrainId].ctrllr.inputs.temperature = arg })
-  ipcMain.on('setSpeedCmd', (event, arg) => { trainsDict[selTrainId].track.inputs.speedCmd = mphToMs(arg) })
-  ipcMain.on('setAuthority', (event, arg) => { trainsDict[selTrainId].track.inputs.authorityCmd = arg })
+  ipcMain.on('setPower', (event, arg) => { trainsDict[selTrainId].controllerIntf.inputs.powerCmd = fromKilo(arg) })
+  ipcMain.on('setEmergencyBrake', (event, arg) => { trainsDict[selTrainId].controllerIntf.inputs.emergencyBrake = arg })
+  ipcMain.on('setServiceBrake', (event, arg) => { trainsDict[selTrainId].controllerIntf.inputs.serviceBrake = arg })
+  ipcMain.on('setLeftDoors', (event, arg) => { trainsDict[selTrainId].controllerIntf.inputs.leftDoors = arg })
+  ipcMain.on('setRightDoors', (event, arg) => { trainsDict[selTrainId].controllerIntf.inputs.rightDoors = arg })
+  ipcMain.on('setLights', (event, arg) => { trainsDict[selTrainId].controllerIntf.inputs.lights = arg })
+  ipcMain.on('setTemperature', (event, arg) => { trainsDict[selTrainId].controllerIntf.inputs.temperature = arg })
+  ipcMain.on('setSpeedCmd', (event, arg) => { trainsDict[selTrainId].trackIntf.inputs.speedCmd = mphToMs(arg) })
+  ipcMain.on('setAuthority', (event, arg) => { trainsDict[selTrainId].trackIntf.inputs.authorityCmd = arg })
   ipcMain.on('setBeacon', (event, arg) => {
-    trainsDict[selTrainId].track.inputs.station = arg.station
-    trainsDict[selTrainId].track.inputs.leftPlatform = arg.leftPlatform
-    trainsDict[selTrainId].track.inputs.rightPlatform = arg.rightPlatform
-    trainsDict[selTrainId].track.inputs.underground = arg.underground
+    trainsDict[selTrainId].trackIntf.inputs.station = arg.station
+    trainsDict[selTrainId].trackIntf.inputs.leftPlatform = arg.leftPlatform
+    trainsDict[selTrainId].trackIntf.inputs.rightPlatform = arg.rightPlatform
+    trainsDict[selTrainId].trackIntf.inputs.underground = arg.underground
   })
   ipcMain.on('setPassengers', (event, arg) => {
-    trainsDict[selTrainId].track.inputs.boardingPax = Math.round(arg)
+    trainsDict[selTrainId].trackIntf.inputs.boardingPax = Math.round(arg)
     trainsDict[selTrainId].procPassengers()
   })
-}
+  ipcMain.on('setGrade', (event, arg) => { trainsDict[selTrainId].trackIntf.inputs.grade = arg / 100 })
+} 

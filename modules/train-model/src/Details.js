@@ -31,7 +31,7 @@ export default class Details extends React.Component {
               <VehicleDataCard vehicle={this.props.train.vehicle} />
             </Stack>
           </Col>
-          {testMode ? <TestCards controller={this.props.train.ctrllr} trackmodel={this.props.train.track} /> : ''}
+          {testMode ? <TestCards controller={this.props.train.controllerIntf} trackmodel={this.props.train.trackIntf} /> : ''}
         </Row>
       </Container>
     )

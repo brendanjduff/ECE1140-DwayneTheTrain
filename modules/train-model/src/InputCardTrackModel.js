@@ -41,6 +41,17 @@ export default class InputCardTrackModel extends React.Component {
                 </InputGroup>
               </Col>
             </Row>
+            <Row className='noVertical'>
+              <Col xs={6} className='noVertical'>
+                Grade
+              </Col>
+              <Col xs={6} className='noVertical'>
+                <InputGroup size='sm' style={{ padding: 1 + 'px' }}>
+                  <SmartTextInput default={this.props.io.grade * 100} channel='setGrade' validate={/^[0-9]?(.[0-9])?$/} />
+                  <InputGroup.Text>%</InputGroup.Text>
+                </InputGroup>
+              </Col>
+            </Row>
             <hr class='solid' />
             <Row className='noVertical'>
               <Col className='noVertical'>
