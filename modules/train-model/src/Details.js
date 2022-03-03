@@ -19,19 +19,19 @@ export default class Details extends React.Component {
           </Col>
         </Row>
         <Row>
-          <Col xl={testUI ? 3 : 6} md={6}>
+          <Col xl={testMode ? 3 : 6} md={6}>
             <Stack>
               <TrainStateCard trainState={this.props.train.state} />
-              <EmergencyBrakeCard ebrake={this.props.train.state.emergencyBrake} />
+              <EmergencyBrakeCard ebrake={this.props.train.user.emergencyBrake} />
             </Stack>
           </Col>
-          <Col xl={testUI ? 3 : 6} md={6}>
+          <Col xl={testMode ? 3 : 6} md={6}>
             <Stack>
               <FailureControlCard user={this.props.train.user} />
               <VehicleDataCard vehicle={this.props.train.vehicle} />
             </Stack>
           </Col>
-          {testUI ? <TestCards controller={this.props.train.ctrllr} trackmodel={this.props.train.track} /> : ''}
+          {testMode ? <TestCards controller={this.props.train.ctrllr} trackmodel={this.props.train.track} /> : ''}
         </Row>
       </Container>
     )

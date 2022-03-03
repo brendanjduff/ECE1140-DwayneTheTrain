@@ -3,6 +3,8 @@ import TrainModel from './TrainModel'
 const { app, BrowserWindow, ipcMain } = require('electron')
 const isDev = require('electron-is-dev')
 
+const testMode = true
+
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (require('electron-squirrel-startup')) {
   // eslint-disable-line global-require
@@ -65,91 +67,87 @@ app.on('activate', () => {
 const trainsList = []
 const trainsDict = []
 let nextId = 1
-
-// System Management
 let selTrainId = 1
-let enableClock = false
-let simulationTime = 0
-let timeMultiplier = 1
-let lastTime = Date.now() / 1000
-const simHz = 120
 
-function updateTrains () {
-  const now = Date.now() / 1000
-  const dt = (now - lastTime) * timeMultiplier
-  if (dt > 0.1) {
-    if (enableClock) {
-      simulationTime += dt
-      trainsList.forEach(t => { t.update(dt) })
-    }
-    lastTime = now
-  }
-}
+// Universal IPC
+ipcMain.on('requestData', (event, arg) => { event.reply('fetchData', { sel: trainsDict[selTrainId], trains: trainsList }) })
+ipcMain.on('selectTrain', (event, arg) => { selTrainId = arg })
+ipcMain.on('setEngineFailure', (event, arg) => { trainsDict[selTrainId].user.engineFailure = arg })
+ipcMain.on('setBrakeFailure', (event, arg) => { trainsDict[selTrainId].user.brakeFailure = arg })
+ipcMain.on('setSignalFailure', (event, arg) => { trainsDict[selTrainId].user.signalFailure = arg })
+ipcMain.on('setEmergencyBrakePax', (event, arg) => { trainsDict[selTrainId].user.emergencyBrake = arg })
 
-setInterval(() => { updateTrains() }, 1000 / simHz)
-
-// General IPC
-ipcMain.on('requestData', (event, arg) => {
-  event.reply('fetchData', { sel: trainsDict[selTrainId], trains: trainsList })
-})
-
-ipcMain.on('selectTrain', (event, arg) => {
-  selTrainId = arg
-})
-
-ipcMain.on('createTrain', (event, arg) => {
+function createTrain () {
   const newTrain = new TrainModel(nextId)
   nextId += 1
   trainsList.push(newTrain)
   trainsDict[newTrain.trainId] = newTrain
-})
+}
 
-ipcMain.on('setClock', (event, arg) => { enableClock = arg })
+if (testMode) {
+  let enableClock = false
+  let simulationTime = 0
+  let timeMultiplier = 1
+  let lastTime = Date.now() / 1000
+  const simHz = 120
 
-ipcMain.on('setMult', (event, arg) => { timeMultiplier = arg })
+  function updateTrains () {
+    const now = Date.now() / 1000
+    const dt = (now - lastTime) * timeMultiplier
+    if (dt > 0.1) {
+      if (enableClock) {
+        simulationTime += dt
+        trainsList.forEach(t => { t.update(dt) })
+      }
+      lastTime = now
+    }
+  }
 
-ipcMain.on('requestTiming', (event, arg) => {
-  event.reply('fetchTiming', { clock: enableClock, mult: timeMultiplier, time: simulationTime })
-})
+  setInterval(() => { updateTrains() }, 1000 / simHz)
 
-ipcMain.on('requestReset', (event, arg) => {
-  event.reply('resetOverview', true)
-})
+  ipcMain.on('createTrain', (event, arg) => { createTrain() })
 
-ipcMain.on('reset', (event, arg) => {
-  trainsList.length = 0
-  trainsDict.length = 0
-  nextId = 1
-  selTrainId = 1
-  enableClock = false
-  simulationTime = 0
-  timeMultiplier = 1
-  lastTime = Date.now() / 1000
-})
+  ipcMain.on('setClock', (event, arg) => { enableClock = arg })
 
-// Train Update IPC
-ipcMain.on('setEngineFailure', (event, arg) => { trainsDict[selTrainId].user.engineFailure = arg })
-ipcMain.on('setBrakeFailure', (event, arg) => { trainsDict[selTrainId].user.brakeFailure = arg })
-ipcMain.on('setSignalFailure', (event, arg) => { trainsDict[selTrainId].user.signalFailure = arg })
-ipcMain.on('setPower', (event, arg) => { trainsDict[selTrainId].ctrllr.inputs.powerCmd = fromKilo(arg) })
-ipcMain.on('setEmergencyBrake', (event, arg) => { trainsDict[selTrainId].ctrllr.inputs.emergencyBrake = arg })
-ipcMain.on('setServiceBrake', (event, arg) => { trainsDict[selTrainId].ctrllr.inputs.serviceBrake = arg })
-ipcMain.on('setLeftDoors', (event, arg) => { trainsDict[selTrainId].ctrllr.inputs.leftDoors = arg })
-ipcMain.on('setRightDoors', (event, arg) => { trainsDict[selTrainId].ctrllr.inputs.rightDoors = arg })
-ipcMain.on('setLights', (event, arg) => { trainsDict[selTrainId].ctrllr.inputs.lights = arg })
-ipcMain.on('setTemperature', (event, arg) => { trainsDict[selTrainId].ctrllr.inputs.temperature = arg })
-ipcMain.on('setSpeedCmd', (event, arg) => { trainsDict[selTrainId].track.inputs.speedCmd = mphToMs(arg) })
-ipcMain.on('setAuthority', (event, arg) => { trainsDict[selTrainId].track.inputs.authorityCmd = arg })
-ipcMain.on('setBeacon', (event, arg) => {
-  trainsDict[selTrainId].track.inputs.station = arg.station
-  trainsDict[selTrainId].track.inputs.leftPlatform = arg.leftPlatform
-  trainsDict[selTrainId].track.inputs.rightPlatform = arg.rightPlatform
-  trainsDict[selTrainId].track.inputs.underground = arg.underground
-})
-ipcMain.on('setPassengers', (event, arg) => {
-  trainsDict[selTrainId].track.inputs.boardingPax = Math.round(arg)
-  trainsDict[selTrainId].procPassengers()
-})
+  ipcMain.on('setMult', (event, arg) => { timeMultiplier = arg })
 
-// FOR DEBUGGING ONLY
-ipcMain.on('null', (event, arg) => { console.log('A component is passing messages on the wrong channel') })
+  ipcMain.on('requestTiming', (event, arg) => {
+    event.reply('fetchTiming', { clock: enableClock, mult: timeMultiplier, time: simulationTime })
+  })
+
+  ipcMain.on('requestReset', (event, arg) => {
+    event.reply('resetOverview', true)
+  })
+
+  ipcMain.on('reset', (event, arg) => {
+    trainsList.length = 0
+    trainsDict.length = 0
+    nextId = 1
+    selTrainId = 1
+    enableClock = false
+    simulationTime = 0
+    timeMultiplier = 1
+    lastTime = Date.now() / 1000
+  })
+
+  // Train Update Test IPC
+  ipcMain.on('setPower', (event, arg) => { trainsDict[selTrainId].ctrllr.inputs.powerCmd = fromKilo(arg) })
+  ipcMain.on('setEmergencyBrake', (event, arg) => { trainsDict[selTrainId].ctrllr.inputs.emergencyBrake = arg })
+  ipcMain.on('setServiceBrake', (event, arg) => { trainsDict[selTrainId].ctrllr.inputs.serviceBrake = arg })
+  ipcMain.on('setLeftDoors', (event, arg) => { trainsDict[selTrainId].ctrllr.inputs.leftDoors = arg })
+  ipcMain.on('setRightDoors', (event, arg) => { trainsDict[selTrainId].ctrllr.inputs.rightDoors = arg })
+  ipcMain.on('setLights', (event, arg) => { trainsDict[selTrainId].ctrllr.inputs.lights = arg })
+  ipcMain.on('setTemperature', (event, arg) => { trainsDict[selTrainId].ctrllr.inputs.temperature = arg })
+  ipcMain.on('setSpeedCmd', (event, arg) => { trainsDict[selTrainId].track.inputs.speedCmd = mphToMs(arg) })
+  ipcMain.on('setAuthority', (event, arg) => { trainsDict[selTrainId].track.inputs.authorityCmd = arg })
+  ipcMain.on('setBeacon', (event, arg) => {
+    trainsDict[selTrainId].track.inputs.station = arg.station
+    trainsDict[selTrainId].track.inputs.leftPlatform = arg.leftPlatform
+    trainsDict[selTrainId].track.inputs.rightPlatform = arg.rightPlatform
+    trainsDict[selTrainId].track.inputs.underground = arg.underground
+  })
+  ipcMain.on('setPassengers', (event, arg) => {
+    trainsDict[selTrainId].track.inputs.boardingPax = Math.round(arg)
+    trainsDict[selTrainId].procPassengers()
+  })
+}

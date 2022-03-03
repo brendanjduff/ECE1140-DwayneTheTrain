@@ -22,7 +22,8 @@ export default class TrainModel {
     this.user = {
       engineFailure: false, // true: failure
       brakeFailure: false, // true: failure
-      signalFailure: false // true: failure
+      signalFailure: false, // true: failure
+      emergencyBrake: false
     }
     this.ctrllr = {
       inputs: {
@@ -79,7 +80,7 @@ export default class TrainModel {
   procInputs () {
     // Read inputs from train controller
     this.state.powerCmd = this.ctrllr.inputs.powerCmd
-    this.state.emergencyBrake = this.ctrllr.inputs.emergencyBrake
+    this.state.emergencyBrake = this.ctrllr.inputs.emergencyBrake || this.user.emergencyBrake
     this.state.serviceBrake = this.ctrllr.inputs.serviceBrake
     this.state.leftDoors = this.ctrllr.inputs.leftDoors
     this.state.rightDoors = this.ctrllr.inputs.rightDoors
