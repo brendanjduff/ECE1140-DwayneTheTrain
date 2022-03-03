@@ -121,7 +121,8 @@ export default class TrainModel {
       const Af = this.vehicle.width * this.vehicle.height
       const fAero = 0.5 * rho * Cd * Af * lastV * lastV
       const mass = this.vehicle.mass + (paxMass * (this.state.passengers + this.state.crew))
-      this.state.acceleration = /* Math.min( */(((this.state.power / Math.max(lastV, 1)) - fAero) / (mass))/*, /*this.vehicle.maxAcc) */
+      const fFriction = mu * mass
+      this.state.acceleration = /* Math.min( */(((this.state.power / Math.max(lastV, 1)) - fAero - fFriction) / (mass))/*, /*this.vehicle.maxAcc) */
     }
     this.state.velocity = Math.max(/* Math.min( */lastV + (dt / 2) * (this.state.acceleration + lastA)/*, this.vehicle.maxVel) */, 0)
   }
@@ -167,3 +168,4 @@ const Cd = 1.8
 const rho = 1.225 // kg/m^3
 const motorStartingTime = 4 // seconds to reach full power
 const paxMass = 80 // kg
+const mu = 0.5 // coefficient of friction between steel wheels and rails
