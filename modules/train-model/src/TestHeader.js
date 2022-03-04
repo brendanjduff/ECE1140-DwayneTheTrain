@@ -37,7 +37,7 @@ export default class TestHeader extends React.Component {
         <Col xs='auto'>
           <InputGroup size='sm' style={{ marginTop: 5 + 'px' }}>
             <InputGroup.Text>Clock Speed </InputGroup.Text>
-            <SmartTextInput default={this.state.mult} channel='setMult' validate={/^(([1-5]{1}?[0-9]{1})|(60)|[1-9]{1}|(([0-9]{1})?[.][0-9]))$/} style={{ textAlign: 'right', width: 50 + 'px' }} />
+            <SmartTextInput default={this.state.mult} channel='setMult' validate={/^(([1-4]{1}?[0-9]{1})|(50)|[1-9]{1}|(([0-9]{1})?[.][0-9]))$/} style={{ textAlign: 'right', width: 50 + 'px' }} />
             <InputGroup.Text>x</InputGroup.Text>
           </InputGroup>
         </Col>
