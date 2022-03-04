@@ -16,7 +16,7 @@ export default class TrainModel {
       engineStatus: true, // false: failure
       brakeStatus: true, // false: failure
       signalPickup: true, // false: failure
-      crew: 2,
+      crew: 5,
       passengers: 0
     }
     this.user = {
