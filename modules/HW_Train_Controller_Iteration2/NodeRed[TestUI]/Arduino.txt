@@ -1,0 +1,216 @@
+User Mode: Engineer
+
+User Mode: Engineer
+
+User Mode: Driver
+
+User Mode: Driver
+
+User Mode: Engineer
+
+User Mode: Engineer
+
+kP: 1
+
+kP: 1
+
+kP: 2
+
+kP: 2
+
+kI: 1
+
+kI: 1
+
+kI: 2
+
+kI: 2
+
+kI: 1
+
+kI: 1
+
+kP: 1
+
+kP: 1
+
+User Mode: Driver
+
+User Mode: Driver
+
+Tunnel Lights: On
+
+Tunnel Lights: On
+
+Tunnel Lights: Off
+
+Tunnel Lights: Off
+
+Hand Brake: true
+
+Hand Brake: true
+
+Hand Brake: false
+
+Hand Brake: false
+
+Left Door: Open
+
+Left Door: Open
+
+Left Door: Closed
+
+Left Door: Closed
+
+Right Door: Open
+
+Right Door: Open
+
+Right Door: Closed
+
+Right Door: Closed
+
+Emergency Brake: true
+
+Emergency Brake: true
+
+Emergency Brake: false
+
+Emergency Brake: false
+
+Speed: 0
+
+Speed: 0
+
+Arrived At Station                  Power: 
+
+Arrived At Station                  Power: 
+
+-5
+
+-5
+
+Speed: 0
+
+Speed: 0
+
+Arrived At Station                  Power: 
+
+Arrived At Station                  Power: 
+
+-5
+
+-5
+
+Speed: 1
+
+Speed: 1
+
+Power: 
+
+Power: 
+
+-5
+
+-5
+
+Speed: 2
+
+Speed: 2
+
+Power: 
+
+Power: 
+
+-5
+
+-5
+
+Speed: 3
+
+Speed: 3
+
+Power: 
+
+Power: 
+
+-5
+
+-5
+
+User Mode: Engineer
+
+User Mode: Engineer
+
+User Mode: Driver
+
+User Mode: Driver
+
+Speed: 2
+
+Speed: 2
+
+Power: 
+
+Power: 
+
+-5
+
+-5
+
+Emergency Brake: true
+
+Emergency Brake: true
+
+Speed: 1
+
+Speed: 1
+
+Power: 
+
+Power: 
+
+-5
+
+-5
+
+Speed: 0
+
+Speed: 0
+
+Power: 
+
+Power: 
+
+-5
+
+-5
+
+Speed: 0
+
+Speed: 0
+
+Power: 
+
+Power: 
+
+-5
+
+-5
+
+Temperature: 71
+
+Temperature: 71
+
+Temperature: 72
+
+Temperature: 72
+
+Temperature: 71
+
+Temperature: 71
+
+Temperature: 70
+
+Temperature: 70
+

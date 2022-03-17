@@ -1,0 +1,208 @@
+[
+    {
+        "id": "55e22fddf4f7f530",
+        "type": "tab",
+        "label": "Flow 1",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "9af5fbce190e6385",
+        "type": "ui_text",
+        "z": "55e22fddf4f7f530",
+        "group": "5184f89f3c5c4c59",
+        "order": 0,
+        "width": 0,
+        "height": 0,
+        "name": "",
+        "label": "SerialOut",
+        "format": "{{msg.payload}}",
+        "layout": "row-spread",
+        "className": "",
+        "x": 420,
+        "y": 220,
+        "wires": []
+    },
+    {
+        "id": "b61298a77b9b2285",
+        "type": "serial in",
+        "z": "55e22fddf4f7f530",
+        "name": "ArduinoMega2560",
+        "serial": "63545270c3129d4a",
+        "x": 190,
+        "y": 220,
+        "wires": [
+            [
+                "9af5fbce190e6385",
+                "b1118478e96028d1"
+            ]
+        ]
+    },
+    {
+        "id": "b1118478e96028d1",
+        "type": "file",
+        "z": "55e22fddf4f7f530",
+        "name": "C:\\Users\\ryguy\\OneDrive\\Desktop\\Arduino.txt",
+        "filename": "C:\\Users\\ryguy\\OneDrive\\Desktop\\Arduino.txt",
+        "appendNewline": true,
+        "createDir": true,
+        "overwriteFile": "false",
+        "encoding": "setbymsg",
+        "x": 410,
+        "y": 140,
+        "wires": [
+            [
+                "f68df641651bb4d7"
+            ]
+        ]
+    },
+    {
+        "id": "f68df641651bb4d7",
+        "type": "debug",
+        "z": "55e22fddf4f7f530",
+        "name": "",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 610,
+        "y": 200,
+        "wires": []
+    },
+    {
+        "id": "39d25ee67775ab39",
+        "type": "file in",
+        "z": "55e22fddf4f7f530",
+        "name": "C:\\Users\\ryguy\\OneDrive\\Desktop\\SPDVals.txt",
+        "filename": "C:\\Users\\ryguy\\OneDrive\\Desktop\\SPDVals.txt",
+        "format": "lines",
+        "chunk": false,
+        "sendError": false,
+        "encoding": "none",
+        "allProps": true,
+        "x": 200,
+        "y": 340,
+        "wires": [
+            [
+                "f5b943a380f1d58d",
+                "4a17c13dfba0feea",
+                "f7f8c51ae83cb6ac"
+            ]
+        ]
+    },
+    {
+        "id": "f5b943a380f1d58d",
+        "type": "serial out",
+        "z": "55e22fddf4f7f530",
+        "name": "ArduinoMega2560",
+        "serial": "63545270c3129d4a",
+        "x": 510,
+        "y": 340,
+        "wires": []
+    },
+    {
+        "id": "4a17c13dfba0feea",
+        "type": "ui_text",
+        "z": "55e22fddf4f7f530",
+        "group": "5184f89f3c5c4c59",
+        "order": 2,
+        "width": 0,
+        "height": 0,
+        "name": "",
+        "label": "SerialIn",
+        "format": "{{msg.payload}}",
+        "layout": "row-spread",
+        "className": "",
+        "x": 520,
+        "y": 400,
+        "wires": []
+    },
+    {
+        "id": "f7f8c51ae83cb6ac",
+        "type": "debug",
+        "z": "55e22fddf4f7f530",
+        "name": "",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 490,
+        "y": 480,
+        "wires": []
+    },
+    {
+        "id": "aa26afb3347a853b",
+        "type": "inject",
+        "z": "55e22fddf4f7f530",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": true,
+        "onceDelay": "1",
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 110,
+        "y": 280,
+        "wires": [
+            [
+                "39d25ee67775ab39"
+            ]
+        ]
+    },
+    {
+        "id": "5184f89f3c5c4c59",
+        "type": "ui_group",
+        "name": "Default",
+        "tab": "a9ae17ee4b7886a1",
+        "order": 1,
+        "disp": true,
+        "width": "6",
+        "collapse": false,
+        "className": ""
+    },
+    {
+        "id": "63545270c3129d4a",
+        "type": "serial-port",
+        "serialport": "COM3",
+        "serialbaud": "9600",
+        "databits": "8",
+        "parity": "none",
+        "stopbits": "1",
+        "waitfor": "",
+        "dtr": "none",
+        "rts": "none",
+        "cts": "none",
+        "dsr": "none",
+        "newline": "\\n",
+        "bin": "false",
+        "out": "char",
+        "addchar": "",
+        "responsetimeout": "10000"
+    },
+    {
+        "id": "a9ae17ee4b7886a1",
+        "type": "ui_tab",
+        "name": "Home",
+        "icon": "dashboard",
+        "disabled": false,
+        "hidden": false
+    }
+]
