@@ -3,8 +3,6 @@ import TrainModel from './TrainModel'
 const { app, BrowserWindow, ipcMain } = require('electron')
 const isDev = require('electron-is-dev')
 
-const testMode = true
-
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (require('electron-squirrel-startup')) {
   // eslint-disable-line global-require
@@ -64,91 +62,80 @@ app.on('activate', () => {
 })
 
 // Main Process
-const trainsList = []
-const trainsDict = []
-let nextId = 1
+let trainsList = []
+let trainsDict = []
 let selTrainId = 1
+let hwTrain = null
+let hwTrainId = 0
 
-// Universal IPC
+// UX IPC
 ipcMain.on('requestData', (event, arg) => { event.reply('fetchData', { sel: trainsDict[selTrainId], trains: trainsList }) })
 ipcMain.on('selectTrain', (event, arg) => { selTrainId = arg })
+// User IPC
 ipcMain.on('setEngineFailure', (event, arg) => { trainsDict[selTrainId].user.engineFailure = arg })
 ipcMain.on('setBrakeFailure', (event, arg) => { trainsDict[selTrainId].user.brakeFailure = arg })
 ipcMain.on('setSignalFailure', (event, arg) => { trainsDict[selTrainId].user.signalFailure = arg })
 ipcMain.on('setEmergencyBrakePax', (event, arg) => { trainsDict[selTrainId].user.emergencyBrake = arg })
 
-function createTrain() {
-  const newTrain = new TrainModel(nextId)
-  nextId += 1
+function createTrain (id, hw) {
+  const newTrain = new TrainModel(id, hw)
+  if(trainsList.length === 0) {
+    selTrainId = id
+  }
   trainsList.push(newTrain)
   trainsDict[newTrain.trainId] = newTrain
+  if (hw) {
+    hwTrain = newTrain
+    hwTrainId = hwTrain.id
+  }
 }
 
-if (testMode) { 
-  let enableClock = false
-  let simulationTime = 0
-  let timeMultiplier = 1
-  let lastTime = Date.now() / 1000
-  const simHz = 120
+const messenger = require('messenger')
+const input = messenger.createListener(8005)
+const watchdog = messenger.createSpeaker(8000)
+const trackOutput = messenger.createSpeaker(8004)
+const swtcOutput = messenger.createSpeaker(8006)
+const hwtcOutput = messenger.createSpeaker(8007)
 
-  function updateTrains () {
-    const now = Date.now() / 1000
-    const dt = (now - lastTime) * timeMultiplier
-    if (dt > 0.1) {
-      if (enableClock) {
-        simulationTime += dt
-        trainsList.forEach(t => { t.update(dt) })
-      }
-      lastTime = now
-    }
-  }
+input.on('trackModel', (m, data) => {
+  const outputSW = []
+  let outputHW = {}
+  data.forEach(t => {
+    const id = t.id
+    trainsDict[id].receiveTrackInput(t)
+    trainsDict[id].procTrackInputs()
+    trainsDict[id].procControlOutputs()
+    if (hwTrainId === id) { outputHW = trainsDict[id].getControlOutputs() } else { outputSW.push(trainsDict[id].getControlOutputs()) }
+  })
+  swtcOutput.shout('trainModel', outputSW)
+  hwtcOutput.shout('trainModel', outputHW)
+})
 
-  setInterval(() => { updateTrains() }, 1000 / simHz)
+input.on('controllerSW', (m, data) => {
+  data.forEach(t => {
+    const id = t.id
+    trainsDict[id].receiveControlInput(t)
+  })
+})
+input.on('controllerHW', (m, data) => {
+  hwTrain.receiveControlInput(data)
+})
 
-  ipcMain.on('createTrain', (event, arg) => { createTrain() })
-  
-  ipcMain.on('setClock', (event, arg) => { enableClock = arg })
-  
-  ipcMain.on('setMult', (event, arg) => { timeMultiplier = arg })
-  
-  ipcMain.on('requestTiming', (event, arg) => {
-    event.reply('fetchTiming', { clock: enableClock, mult: timeMultiplier, time: simulationTime })
+input.on('clock2', (m, data) => {
+  const outputTrack = []
+  trainsList.forEach(t => {
+    const dt = data.dt
+    t.procControlAndUserInputs()
+    t.updatePhysics(dt)
+    t.procTrackOutputs(dt)
+    outputTrack.push(t.getTrackOutputs())
   })
-  
-  ipcMain.on('requestReset', (event, arg) => {
-    event.reply('resetOverview', true)
-  })
-  
-  ipcMain.on('reset', (event, arg) => {
-    trainsList.length = 0
-    trainsDict.length = 0
-    nextId = 1
-    selTrainId = 1
-    enableClock = false
-    simulationTime = 0
-    timeMultiplier = 1
-    lastTime = Date.now() / 1000
-  })
-  
-  // Train Update Test IPC
-  ipcMain.on('setPower', (event, arg) => { trainsDict[selTrainId].controllerIntf.inputs.powerCmd = fromKilo(arg) })
-  ipcMain.on('setEmergencyBrake', (event, arg) => { trainsDict[selTrainId].controllerIntf.inputs.emergencyBrake = arg })
-  ipcMain.on('setServiceBrake', (event, arg) => { trainsDict[selTrainId].controllerIntf.inputs.serviceBrake = arg })
-  ipcMain.on('setLeftDoors', (event, arg) => { trainsDict[selTrainId].controllerIntf.inputs.leftDoors = arg })
-  ipcMain.on('setRightDoors', (event, arg) => { trainsDict[selTrainId].controllerIntf.inputs.rightDoors = arg })
-  ipcMain.on('setLights', (event, arg) => { trainsDict[selTrainId].controllerIntf.inputs.lights = arg })
-  ipcMain.on('setTemperature', (event, arg) => { trainsDict[selTrainId].controllerIntf.inputs.temperature = arg })
-  ipcMain.on('setSpeedCmd', (event, arg) => { trainsDict[selTrainId].trackIntf.inputs.speedCmd = mphToMs(arg) })
-  ipcMain.on('setAuthority', (event, arg) => { trainsDict[selTrainId].trackIntf.inputs.authorityCmd = arg })
-  ipcMain.on('setBeacon', (event, arg) => {
-    trainsDict[selTrainId].trackIntf.inputs.station = arg.station
-    trainsDict[selTrainId].trackIntf.inputs.leftPlatform = arg.leftPlatform
-    trainsDict[selTrainId].trackIntf.inputs.rightPlatform = arg.rightPlatform
-    trainsDict[selTrainId].trackIntf.inputs.underground = arg.underground
-  })
-  ipcMain.on('setPassengers', (event, arg) => {
-    trainsDict[selTrainId].trackIntf.inputs.boardingPax = Math.round(arg)
-    trainsDict[selTrainId].procPassengers()
-  })
-  ipcMain.on('setGrade', (event, arg) => { trainsDict[selTrainId].trackIntf.inputs.grade = arg / 100 })
-} 
+  trackOutput.shout('trainModel', outputTrack)
+})
+
+// Receiver for CTC (Train Creation / Destruction Only)
+input.on('createTrain', (m, data) => {
+  createTrain(data['id'], data['hw']) 
+}) // create or destroy train (occurs when leaving or entering the yard)
+
+setInterval(() => { watchdog.shout('trainModel', true) }, 100)
