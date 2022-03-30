@@ -1,6 +1,5 @@
 import React from 'react'
-import TrainController from './trainController'
-import { Button, Card, Container, Row, Col, ToggleButton, ButtonGroup } from 'react-bootstrap'
+import { Button, Card, Container, Row, Col, ToggleButton, ButtonGroup, Form } from 'react-bootstrap'
 import BootstrapSwitchButton from 'bootstrap-switch-button-react'
 const { ipcRenderer } = window.require('electron')
 
@@ -151,15 +150,15 @@ class App extends React.Component {
             <Row>
               <Col>
                 <h2>Lights</h2>
-                <BootstrapSwitchButton onClick={e => { ipcRenderer.send('lightsOnOff', e.target.checked) }} width={10}/>
+                <Form.Check type='switch' defaultChecked={false} onClick={e => { ipcRenderer.send('lightsOnOff', e.target.checked) }} width={10}/>
               </Col>
               <Col>
                 <h2>Left Door</h2>
-                <BootstrapSwitchButton onClick={e => { ipcRenderer.send('leftDoor', e.target.checked) }} width={80} onlabel='Open' offlabel='Close' />
+                <Form.Check type='switch' defaultChecked={false}  onClick={e => { ipcRenderer.send('leftDoor', e.target.checked) }} width={80} onlabel='Open' offlabel='Close' />
               </Col>
               <Col>
                 <h2>Right Door</h2>
-                <BootstrapSwitchButton onClick={e => { ipcRenderer.send('rightDoor', e.target.checked) }} width={80} onlabel='Open' offlabel='Close' />
+                <Form.Check type='switch' defaultChecked={false}  onClick={e => { ipcRenderer.send('rightDoor', e.target.checked) }} width={80} onlabel='Open' offlabel='Close' />
               </Col>
             </Row>
           </Container>

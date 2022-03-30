@@ -1,3 +1,4 @@
+import { listenerCount } from 'process'
 import TrainController from './trainController'
 const { app, BrowserWindow, ipcMain } = require('electron')
 const path = require('path')
@@ -85,3 +86,27 @@ ipcMain.on('cmdSpeedDown', (event,arg) => {train.cmdSpeedDown()})
 ipcMain.on('automaticMode', (event,arg) => {train.automaticMode()})
 ipcMain.on('manualMode', (event,arg) => {train.manualMode()})
 ipcMain.on('powerCalc', (event,arg) => {train.powerCalc()})
+
+const messenger = require('messenger')
+const input = messenger.createListener(8006)
+const watchdog = messenger.createSpeaker(8000)
+const trainModel = messenger.createSpeaker(8005)
+
+setInterval(() => { watchdog.shout('controllerSW', true)}, 100)
+
+input.on('trainModel', (m,data) => {
+  data.forEach(t => {
+    const id = t.id
+    train.actSpeed = t['velocity']
+    train.cmdSpeed = t['speedCmd']
+    train.authority = t['authorityCmd']
+    train.location = t['station']
+    // = data['rightPlatform']
+    // = data['leftPlatform']
+    // = data['underground']
+  })
+  train.powerCalc()
+  var output = []
+  output.push(train.getMessage())
+  trainModel.shout('controllerSW', output)
+})

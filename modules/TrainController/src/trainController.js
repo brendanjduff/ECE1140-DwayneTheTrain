@@ -10,7 +10,7 @@ export default class TrainController {
     this.cmdSpeed = 0
     this.actSpeed = 0
     this.authority = 0
-    this.kP = 0
+    this.kP = 1
     this.kI = 0
     this.temp = 68
     this.speed = 0
@@ -38,7 +38,7 @@ export default class TrainController {
     return this.speed
   }
   // Decrease speed
-    spdDown () {
+  spdDown () {
     this.speed = this.speed - 1
     if (this.speed < 0) {
       this.speed = 0
@@ -76,16 +76,19 @@ export default class TrainController {
   }
   // Turn lights on/off
   lightsOnOff (e) {
+    console.log("lights" + e)
     this.lights = e   //remove .target.checked and just call e for all check function 
     return this.lights
   }
   // Left door
   leftDoor (e) {
+    console.log("ldoor" + e)
     this.leftD = e
       return this.leftD
   }
   // Right door
   rightDoor (e) {
+    console.log("rdoor" + e)
     this.rightD = e
       return this.rightD
   }
@@ -179,32 +182,39 @@ export default class TrainController {
       return this.automatic
   }
 
-  // Backlog Functions
-  // Velocity Error
-  error () {
-    this.err = this.cmdSpeed - this.actSpeed
-  }
-  // Cumulative Error
-  cumError (err) {
-    this.cumErr = this.cumErr + this.err
-  }
+  // Backend Functiosn
   // Power Calculation
   powerCalc (err, cumErr, cmdSpeed) {
+    this.err = this.cmdSpeed - this.actSpeed
+    this.cumErr = this.cumErr + this.err
     //this.power = this.err * this.kP + this.cumErr * this.kI
-    this.trainMass = 40000;
-    this.humanMass = 20000;
-    this.massRange = this.trainMass - this.humanMass
-    this.powLOW = 0.5*cmdSpeed*(massTrain - massRange)
-    this.powHIGH = 0.5*cmdSpeed*(massTrain + massRange)
+    var trainMass = 40000;
+    var humanMass = 20000;
+    var massRange = trainMass - humanMass
+    var powLOW = 0.5*cmdSpeed*(trainMass - massRange)
+    var powHIGH = 0.5*cmdSpeed*(trainMass + massRange)
     if(this.err * this.kP + this.cumErr * this.kI < 480000) {
       this.power = this.err * this.kP + this.cumErr * this.kI
-      if(powHIGH > power && powLOW < power) {
+      if(powHIGH > this.power && powLOW < this.power) {
         return this.power
       }
     }
     if(this.err * this.kP + this.cumErr * this.kI > 480000) {
       this.power = 480000
       return this.power
+    }
+  }
+
+  getMessage() {
+    return {
+      id: 1,
+      powerCmd: this.power,
+      emergencyBrake: this.eBrake,
+      serviceBrake: this.sBrake,
+      leftDoors: this.leftD,
+      rightDoors: this.rightD,
+      lights: this.lights,
+      temperature: this.temp
     }
   }
 }
