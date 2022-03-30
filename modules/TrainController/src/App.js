@@ -33,7 +33,7 @@ class App extends React.Component {
               <h2>Authority</h2>
               <Col>
                 <Card style={{ width: '15rem' }}>
-                  <Card.Body>{this.state.authority}</Card.Body>
+                  <Card.Body>{this.state.authority} BLOCKS</Card.Body>
                 </Card>
               </Col>
               <Col>
@@ -50,27 +50,31 @@ class App extends React.Component {
             </Row>
             <Row>
               <h2>Actual Speed</h2>
-              <Row>
-                <Card style={{ width: '15rem' }}>
-                  <Card.Body>{this.state.actSpeed}</Card.Body>
-                </Card>
-                <Col>
-                  {actUp} &nbsp;
-                  {actDown}
-                </Col>
-              </Row>  
             </Row>
             <Row>
-              <h2>Commanded Speed</h2>
-              <Row>
+              <Col>
                 <Card style={{ width: '15rem' }}>
-                  <Card.Body>{this.state.cmdSpeed}</Card.Body>
+                  <Card.Body>{this.state.actSpeed} MPH</Card.Body>
                 </Card>
-                <Col>
-                  {cmdUp} &nbsp;
-                  {cmdDown}
-                </Col>
+              </Col>
+              <Col>
+                {actUp} &nbsp;
+                {actDown}
+              </Col>
               </Row>  
+            <Row>
+              <h2>Commanded Speed</h2>
+            </Row>
+            <Row>
+              <Col>
+                <Card style={{ width: '15rem' }}>
+                  <Card.Body>{this.state.cmdSpeed} MPH</Card.Body>
+                </Card>
+              </Col>
+              <Col>
+                {cmdUp} &nbsp;
+                {cmdDown}
+              </Col>
             </Row>
             <Row>
               <Row>
@@ -79,7 +83,7 @@ class App extends React.Component {
               <Row>
                 <Col>
                   <Card style={{ width: '15rem' }}>
-                    <Card.Body>{this.state.speed}</Card.Body>
+                    <Card.Body>{this.state.speed} MPH</Card.Body>
                   </Card>
                 </Col>
                 <Col>
@@ -96,28 +100,32 @@ class App extends React.Component {
             </Row>
             <Row>
               <h2>Temperature</h2>
-              <Row>
-                <Card style={{ width: '15rem' }}>
-                  <Card.Body>{this.state.temp}</Card.Body>
-                </Card>
-                <Col>
-                  <Button variant='outline-dark' onClick={() => { ipcRenderer.send('tempUp') }}>⇧</Button> &nbsp;
-                  <Button variant='outline-dark' onClick={() => { ipcRenderer.send('tempDown') }}>⇩</Button>
-                </Col>
-              </Row>
             </Row>
             <Row>
               <Col>
-              <h2>Kp</h2>
-                <Row>
-                  <Card style={{ width: '10rem' }}>
-                    <Card.Body>{this.state.kP}</Card.Body>
-                  </Card>
-                  <Col>
-                    <Button variant='outline-dark' onClick={() => { ipcRenderer.send('KpUp') }}>⇧</Button> &nbsp;
-                    <Button variant='outline-dark' onClick={() => { ipcRenderer.send('KpDown') }}>⇩</Button>
-                  </Col>
-                </Row>
+                <Card style={{ width: '15rem' }}>
+                  <Card.Body>{this.state.temp}</Card.Body>
+                </Card>
+              </Col>
+              <Col>
+                <Button variant='outline-dark' onClick={() => { ipcRenderer.send('tempUp') }}>⇧</Button> &nbsp;
+                <Button variant='outline-dark' onClick={() => { ipcRenderer.send('tempDown') }}>⇩</Button>
+              </Col>
+            </Row>
+            <Row>
+              <Col>
+                <h2>Kp</h2>
+                  <Row>
+                    <Col>
+                      <Card style={{ width: '10rem' }}>
+                        <Card.Body>{this.state.kP}</Card.Body>
+                      </Card>
+                    </Col>
+                    <Col>
+                      <Button variant='outline-dark' onClick={() => { ipcRenderer.send('KpUp') }}>⇧</Button> &nbsp;
+                      <Button variant='outline-dark' onClick={() => { ipcRenderer.send('KpDown') }}>⇩</Button>
+                    </Col>
+                  </Row>
               </Col>  
               <Col>
                 <h2>Ki</h2>
@@ -133,8 +141,8 @@ class App extends React.Component {
               </Col>
             </Row>
             <Row>
-              <h2>Location</h2>
               <Col>
+                <h2>Location</h2>
                 <Card style={{ width: '15rem' }}>
                   <Card.Body>{this.state.location}</Card.Body>
                 </Card>

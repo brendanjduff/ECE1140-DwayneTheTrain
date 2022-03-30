@@ -30,9 +30,9 @@ export default class TrainController {
   // UI Functions
   // Increase speed
   spdUp () {
-    this.speed = this.speed + 1
+    this.speed = this.speed + 1 
     if (this.speed > 43) {
-      this.speed = 43
+      this.speed = 43 
     }
     console.log(this.speed)
     return this.speed
@@ -95,6 +95,8 @@ export default class TrainController {
           return this.location
       }
   }
+
+  //Engineer Only Functions
   //Increase Kp
   KpUp () {
       this.kP = this.kP + 1
@@ -125,6 +127,8 @@ export default class TrainController {
       console.log(this.kI)
       return this.kI
   }
+
+  //Tester Only Functions
   //Increase authority 
   authorityUp () {
       this.authority = this.authority + 1
@@ -185,8 +189,22 @@ export default class TrainController {
     this.cumErr = this.cumErr + this.err
   }
   // Power Calculation
-  powerCalc (err, cumErr) {
-    this.power = this.err * this.kP + this.cumErr * this.kI
-    return this.power
+  powerCalc (err, cumErr, cmdSpeed) {
+    //this.power = this.err * this.kP + this.cumErr * this.kI
+    this.trainMass = 40000;
+    this.humanMass = 20000;
+    this.massRange = this.trainMass - this.humanMass
+    this.powLOW = 0.5*cmdSpeed*(massTrain - massRange)
+    this.powHIGH = 0.5*cmdSpeed*(massTrain + massRange)
+    if(this.err * this.kP + this.cumErr * this.kI < 480000) {
+      this.power = this.err * this.kP + this.cumErr * this.kI
+      if(powHIGH > power && powLOW < power) {
+        return this.power
+      }
+    }
+    if(this.err * this.kP + this.cumErr * this.kI > 480000) {
+      this.power = 480000
+      return this.power
+    }
   }
 }
