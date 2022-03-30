@@ -5,8 +5,9 @@
 
 // Export functions
 export default class TrainController {
-  constructor() {
+  constructor(id) {
     // Input Variables
+    this.id = id
     this.cmdSpeed = 0
     this.actSpeed = 0
     this.authority = 0
@@ -207,7 +208,7 @@ export default class TrainController {
 
   getMessage() {
     return {
-      id: 1,
+      id: this.id,
       powerCmd: this.power,
       emergencyBrake: this.eBrake,
       serviceBrake: this.sBrake,

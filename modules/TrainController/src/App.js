@@ -1,16 +1,20 @@
 import React from 'react'
-import { Button, Card, Container, Row, Col, ToggleButton, ButtonGroup, Form } from 'react-bootstrap'
-import BootstrapSwitchButton from 'bootstrap-switch-button-react'
+import { Button, Card, Container, Row, Col, ToggleButton, ButtonGroup, Form, DropdownButton, Dropdown } from 'react-bootstrap'
 const { ipcRenderer } = window.require('electron')
 
 class App extends React.Component {
   constructor (props) {
     super(props)
-    this.state = { speed: 0, temp: 68, cmdSpeed: 0, actSpeed: 0 , authority: 0, kI: 0, kP: 0, automatic: false }
+    this.state = { exists: false, speed: 0, temp: 68, cmdSpeed: 0, actSpeed: 0 , authority: 0, kI: 0, kP: 0, automatic: false }
   }
 
   componentDidMount () {
-    ipcRenderer.on('SendData', (event, arg) => {this.setState({ speed: arg.speed, temp: arg.temp, cmdSpeed: arg.cmdSpeed, actSpeed: arg.actSpeed, authority: arg.authority, location: arg.location, kI: arg.kI, kP: arg.kP, automatic: arg.automatic })})
+    ipcRenderer.on('SendData', (event, arg) => {
+      if (arg.exists) {
+        this.setState({ exists: arg.exists, id: arg.train.id, speed: arg.train.speed, temp: arg.train.temp, cmdSpeed: arg.train.cmdSpeed, actSpeed: arg.train.actSpeed, authority: arg.train.authority, location: arg.train.location, kI: arg.train.kI, kP: arg.train.kP, automatic: arg.train.automatic, ids: arg.ids })}
+      else {
+        this.setState({exists: arg.exists})
+      }})
     this.intervalID = setInterval(() => { ipcRenderer.send('RequestData')}, 50)
   }
 
@@ -24,8 +28,12 @@ class App extends React.Component {
 
     const stat = this.state.automatic
 
-    return (
+    if (this.state.exists) {return (
       <div>
+        <DropdownButton title={'Train ' + this.state.id} size='sm' style={{ marginBottom: 10 + 'px' }}>
+        {this.state.ids.map((t) => (t !== this.state.id) ? (<Dropdown.Item key={t} onClick={() => { ipcRenderer.send('selectTrain', t) }}>Train {t}</Dropdown.Item>) : '')}
+        </DropdownButton>
+
         <body>
           <Container>
             <Row>
@@ -165,7 +173,10 @@ class App extends React.Component {
           <script src='trainController.js' />
         </body>
       </div>
-    )
+    )}
+    else {
+      return (<div><p>No Trains</p></div>)
+    }
   }
 }
 

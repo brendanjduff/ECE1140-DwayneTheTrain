@@ -1,4 +1,3 @@
-import { listenerCount } from 'process'
 import TrainController from './trainController'
 const { app, BrowserWindow, ipcMain } = require('electron')
 const path = require('path')
@@ -61,31 +60,38 @@ app.on('activate', () => {
 
 // In this file you can include the rest of your app's specific main process
 // code. You can also put them in separate files and import them here.
-const train = new TrainController()
-ipcMain.on('RequestData', (event, arg) => {event.reply('SendData', train)})
-ipcMain.on('spdUp', (event,arg) => {train.spdUp()})
-ipcMain.on('spdDown', (event,arg) => {train.spdDown()})
-ipcMain.on('emerBrake', (event,arg) => {train.emerBrake()})
-ipcMain.on('serBrake', (event,arg) => {train.serBrake()})
-ipcMain.on('tempUp', (event,arg) => {train.tempUp()})
-ipcMain.on('tempDown', (event,arg) => {train.tempDown()})
-ipcMain.on('lightsOnOff', (event,arg) => {train.lightsOnOff(arg)})
-ipcMain.on('leftDoor', (event,arg) => {train.leftDoor(arg)})
-ipcMain.on('rightDoor', (event,arg) => {train.rightDoor(arg)})
-ipcMain.on('showLocation', (event,arg) => {train.showLocation()})
-ipcMain.on('KpUp', (event,arg) => {train.KpUp()})
-ipcMain.on('KpDown', (event,arg) => {train.KpDown()})
-ipcMain.on('KiUp', (event,arg) => {train.KiUp()})
-ipcMain.on('KiDown', (event,arg) => {train.KiDown()})
-ipcMain.on('authorityUp', (event,arg) => {train.authorityUp()})
-ipcMain.on('authorityDown', (event,arg) => {train.authorityDown()})
-ipcMain.on('actSpeedUp', (event,arg) => {train.actSpeedUp()})
-ipcMain.on('actSpeedDown', (event,arg) => {train.actSpeedDown()})
-ipcMain.on('cmdSpeedUp', (event,arg) => {train.cmdSpeedUp()})
-ipcMain.on('cmdSpeedDown', (event,arg) => {train.cmdSpeedDown()})
-ipcMain.on('automaticMode', (event,arg) => {train.automaticMode()})
-ipcMain.on('manualMode', (event,arg) => {train.manualMode()})
-ipcMain.on('powerCalc', (event,arg) => {train.powerCalc()})
+
+let trainsList = []
+let trainsDict = []
+let selTrainId = 0
+
+ipcMain.on('RequestData', (event, arg) => {
+  if (selTrainId > 0) { event.reply('SendData', {exists: true, train: trainsDict[selTrainId], ids: trainsList.map((t) => t.id)})} 
+  else { event.reply('SendData', {exists: false})}})
+ipcMain.on('selectTrain', (event, arg) => { selTrainId = arg })
+ipcMain.on('spdUp', (event,arg) => {trainsDict[selTrainId].spdUp()})
+ipcMain.on('spdDown', (event,arg) => {trainsDict[selTrainId].spdDown()})
+ipcMain.on('emerBrake', (event,arg) => {trainsDict[selTrainId].emerBrake()})
+ipcMain.on('serBrake', (event,arg) => {trainsDict[selTrainId].serBrake()})
+ipcMain.on('tempUp', (event,arg) => {trainsDict[selTrainId].tempUp()})
+ipcMain.on('tempDown', (event,arg) => {trainsDict[selTrainId].tempDown()})
+ipcMain.on('lightsOnOff', (event,arg) => {trainsDict[selTrainId].lightsOnOff(arg)})
+ipcMain.on('leftDoor', (event,arg) => {trainsDict[selTrainId].leftDoor(arg)})
+ipcMain.on('rightDoor', (event,arg) => {trainsDict[selTrainId].rightDoor(arg)})
+ipcMain.on('showLocation', (event,arg) => {trainsDict[selTrainId].showLocation()})
+ipcMain.on('KpUp', (event,arg) => {trainsDict[selTrainId].KpUp()})
+ipcMain.on('KpDown', (event,arg) => {trainsDict[selTrainId].KpDown()})
+ipcMain.on('KiUp', (event,arg) => {trainsDict[selTrainId].KiUp()})
+ipcMain.on('KiDown', (event,arg) => {trainsDict[selTrainId].KiDown()})
+ipcMain.on('authorityUp', (event,arg) => {trainsDict[selTrainId].authorityUp()})
+ipcMain.on('authorityDown', (event,arg) => {trainsDict[selTrainId].authorityDown()})
+ipcMain.on('actSpeedUp', (event,arg) => {trainsDict[selTrainId].actSpeedUp()})
+ipcMain.on('actSpeedDown', (event,arg) => {trainsDict[selTrainId].actSpeedDown()})
+ipcMain.on('cmdSpeedUp', (event,arg) => {trainsDict[selTrainId].cmdSpeedUp()})
+ipcMain.on('cmdSpeedDown', (event,arg) => {trainsDict[selTrainId].cmdSpeedDown()})
+ipcMain.on('automaticMode', (event,arg) => {trainsDict[selTrainId].automaticMode()})
+ipcMain.on('manualMode', (event,arg) => {trainsDict[selTrainId].manualMode()})
+ipcMain.on('powerCalc', (event,arg) => {trainsDict[selTrainId].powerCalc()})
 
 const messenger = require('messenger')
 const input = messenger.createListener(8006)
@@ -94,19 +100,26 @@ const trainModel = messenger.createSpeaker(8005)
 
 setInterval(() => { watchdog.shout('controllerSW', true)}, 100)
 
+input.on('createTrain', (m, data) => {
+  const newTrain = new TrainController(data)
+  if(trainsList.length === 0) {
+    selTrainId = data
+  }
+  trainsList.push(newTrain)
+  trainsDict[data] = newTrain
+})
+
 input.on('trainModel', (m,data) => {
   data.forEach(t => {
     const id = t.id
-    train.actSpeed = t['velocity']
-    train.cmdSpeed = t['speedCmd']
-    train.authority = t['authorityCmd']
-    train.location = t['station']
-    // = data['rightPlatform']
-    // = data['leftPlatform']
-    // = data['underground']
+    trainsDict[id].actSpeed = t['velocity']
+    trainsDict[id].cmdSpeed = t['speedCmd']
+    trainsDict[id].authority = t['authorityCmd']
+    trainsDict[id].location = t['station']
+    // = t['rightPlatform']
+    // = t['leftPlatform']
+    // = t['underground']
   })
-  train.powerCalc()
-  var output = []
-  output.push(train.getMessage())
-  trainModel.shout('controllerSW', output)
+  trainsList.forEach(t => {t.powerCalc()})
+  trainModel.shout('controllerSW', trainsList.map((t) => t.getMessage()))
 })
