@@ -1,4 +1,3 @@
-import { mphToMs, fromKilo } from './UnitConversion'
 import TrainModel from './TrainModel'
 const { app, BrowserWindow, ipcMain } = require('electron')
 const isDev = require('electron-is-dev')

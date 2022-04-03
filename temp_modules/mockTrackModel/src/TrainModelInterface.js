@@ -15,6 +15,7 @@ constructor(id) {
             },
         outputs: {
             distance: 0,
+            passengers: 0,
             maxBoardingPax: 222,
             deboardingPax: 0
             }

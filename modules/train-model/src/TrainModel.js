@@ -34,7 +34,10 @@ export default class TrainModel {
         leftDoors: false, // {open, closed}
         rightDoors: false, // {open, closed}
         lights: false, // {on, off}
-        temperature: 68 // °Fahrenheit
+        temperature: 68, // °Fahrenheit
+        engineFailure: false, // true: failure
+        brakeFailure: false, // true: failure
+        signalFailure: false // true: failure
       },
       outputs: {
         velocity: 0, // m/s
@@ -59,6 +62,7 @@ export default class TrainModel {
       },
       outputs: {
         distance: 0,
+        passengers: 0,
         maxBoardingPax: 0,
         deboardingPax: 0
       }
@@ -108,6 +112,9 @@ export default class TrainModel {
     this.controllerIntf.outputs.rightPlatform = this.thru.rightPlatform
     this.controllerIntf.outputs.leftPlatform = this.thru.leftPlatform
     this.controllerIntf.outputs.underground = this.thru.underground
+    this.controllerIntf.outputs.engineFailure = !this.state.engineStatus
+    this.controllerIntf.outputs.brakeFailure = !this.state.brakeStatus
+    this.controllerIntf.outputs.signalFailure = !this.state.signalPickup
   }
 
   getControlOutputs () {
@@ -183,6 +190,7 @@ export default class TrainModel {
 
   procTrackOutputs (dt) {
     this.trackIntf.outputs.distance = this.state.velocity * dt
+    this.trackIntf.outputs.passengers = this.state.passengers
 
     // generate random deboardingPax if there are passengers on board and 
     if(this.trackIntf.outputs.maxBoardingPax === 0 && this.trackIntf.outputs.deboardingPax === 0 && this.state.passengers > 0) {

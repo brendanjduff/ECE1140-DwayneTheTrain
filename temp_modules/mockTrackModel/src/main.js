@@ -13,7 +13,7 @@ const createWindow = () => {
   // Create the browser window.
   const mainWindow = new BrowserWindow({
     width: 350,
-    height: 800,
+    height: 750,
     show: false,
     webPreferences: {
       contextIsolation: false,
@@ -111,6 +111,7 @@ input.on('trainModel', (m,data) => {
   data.forEach(t => {
     const id = t.id
     trainsDict[id].intf.outputs.distance = t['distance']
+    trainsDict[id].intf.outputs.passengers = t['passengers']
     trainsDict[id].intf.outputs.maxBoardingPax = t['maxBoardingPax']
     trainsDict[id].intf.outputs.deboardingPax = t['deboardingPax']
   })
