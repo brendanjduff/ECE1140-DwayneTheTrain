@@ -59,8 +59,8 @@ app.on('activate', () => {
 // In this file you can include the rest of your app's specific main process
 // code. You can also put them in separate files and import them here.
 
-const trains = []
 let id = 1
+let hw = false
 
 const messenger = require('messenger')
 const watchdog = messenger.createSpeaker(8000)
@@ -70,15 +70,19 @@ const controllerSW = messenger.createSpeaker(8006)
 
 setInterval(() => { watchdog.shout('ctc', true) }, 100)
 
-ipcMain.on('request', (event, arg) => { event.reply('fetch', trains) })
-
-ipcMain.on('setNewId', (event, arg) => { id = arg })
-
 ipcMain.on('createTrain', (event, arg) => {
-  if (!trains.includes(id)) {
+  trackModel.shout('createTrain', id)
+  trainModel.shout('createTrain', { id: id, hw: false })
+  controllerSW.shout('createTrain', id)
+  id++;
+})
+
+ipcMain.on('createTrainHW', (event, arg) => {
+  if(!hw) {
     trackModel.shout('createTrain', id)
-    trainModel.shout('createTrain', { id: id, hw: false })
+    trainModel.shout('createTrain', { id: id, hw: true })
     controllerSW.shout('createTrain', id)
-    trains.push(id)
+    id++;
+    hw = true;
   }
 })
