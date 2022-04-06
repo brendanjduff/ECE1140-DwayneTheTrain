@@ -5,13 +5,18 @@ const { ipcRenderer } = window.require('electron')
 class App extends React.Component {
   constructor (props) {
     super(props)
-    this.state = { exists: false, speed: 0, temp: 68, cmdSpeed: 0, actSpeed: 0 , authority: 0, kI: 0, kP: 0, automatic: false }
+    this.state = { exists: false, speed: 0, temp: 68, cmdSpeed: 0, actSpeed: 0 , eBrake: false, sBrake: false, authority: 0, kI: 0, kP: 0, automatic: false }
+  }
+  msToMph (val) {
+    return val * 2.2369
   }
 
   componentDidMount () {
     ipcRenderer.on('SendData', (event, arg) => {
       if (arg.exists) {
-        this.setState({ exists: arg.exists, id: arg.train.id, speed: arg.train.speed, temp: arg.train.temp, cmdSpeed: arg.train.cmdSpeed, actSpeed: arg.train.actSpeed, authority: arg.train.authority, location: arg.train.location, kI: arg.train.kI, kP: arg.train.kP, automatic: arg.train.automatic, ids: arg.ids })}
+        this.setState({ exists: arg.exists, id: arg.train.id, speed: arg.train.speed, temp: arg.train.temp, sBrake: arg.train.sBrake,
+          eBrake: arg.train.eBrake, cmdSpeed: this.msToMph(arg.train.cmdSpeed), actSpeed: this.msToMph(arg.train.actSpeed), authority: arg.train.authority, 
+          location: arg.train.location, kI: arg.train.kI, kP: arg.train.kP, automatic: arg.train.automatic, ids: arg.ids })}
       else {
         this.setState({exists: arg.exists})
       }})
@@ -25,6 +30,10 @@ class App extends React.Component {
     const actDown = testUI ? <Button variant='outline-dark' onClick={() => { ipcRenderer.send('actSpeedDown') }}>⇩</Button> : ''
     const cmdUp = testUI ? <Button variant='outline-dark' onClick={() => { ipcRenderer.send('cmdSpeedUp') }}>⇧</Button> : ''
     const cmdDown = testUI ? <Button variant='outline-dark' onClick={() => { ipcRenderer.send('cmdSpeedDown') }}>⇩</Button> : ''
+    const KpUp = testUI ? <Button variant='outline-dark' onClick={() => { ipcRenderer.send('KpUp') }}>⇧</Button> : ''
+    const KpDown = testUI ? <Button variant='outline-dark' onClick={() => { ipcRenderer.send('KpDown') }}>⇩</Button> : ''
+    const KiUp = testUI ? <Button variant='outline-dark' onClick={() => { ipcRenderer.send('KiUp') }}>⇧</Button> : ''
+    const KiDown = testUI ? <Button variant='outline-dark' onClick={() => { ipcRenderer.send('KiDown') }}>⇩</Button> : ''
 
     const stat = this.state.automatic
 
@@ -50,8 +59,7 @@ class App extends React.Component {
               <Col>
                 <ButtonGroup>
                   <ToggleButton type='radio' variant={!this.state.automatic ? 'secondary' : 'outline-secondary'} onClick={() =>{ ipcRenderer.send('manualMode') }}>MANUAL</ToggleButton>
-                  <ToggleButton type='radio' variant={this.state.automatic ? 'secondary' : 'outline-secondary'} onClick={() => {
-                  ipcRenderer.send('automaticMode') }}>AUTOMATIC</ToggleButton>
+                  <ToggleButton type='radio' variant={this.state.automatic ? 'secondary' : 'outline-secondary'} onClick={() => {ipcRenderer.send('automaticMode') }}>AUTOMATIC</ToggleButton>
                 </ButtonGroup>
               </Col>
             </Row>
@@ -98,10 +106,14 @@ class App extends React.Component {
                   <Button disabled={stat} variant='outline-dark' onClick={() => { ipcRenderer.send('spdDown') }}>⇩</Button>
                 </Col>
                 <Col>
-                  <ToggleButton variant='primary' onClick={() => { ipcRenderer.send('serBrake') }}>BRAKE</ToggleButton>
+                  <Button 
+                    variant='primary' onClick={() => { ipcRenderer.send('serBrake', !this.state.sBrake) }}>{this.state.sBrake ? 'Disengage Brake' : 'BRAKE'}
+                  </Button>
                 </Col>
                 <Col>
-                  <ToggleButton variant='danger' onClick={() => { ipcRenderer.send('emerBrake') }}>EMERGENCY BRAKE</ToggleButton>
+                  <Button 
+                    variant='danger' onClick={() => { ipcRenderer.send('emerBrake', !this.state.eBrake) }}>{this.state.eBrake ? 'Disengage E-Brake' : 'EMERGENCY BRAKE'}
+                  </Button>
                 </Col>
               </Row>
             </Row>
@@ -111,7 +123,7 @@ class App extends React.Component {
             <Row>
               <Col>
                 <Card style={{ width: '15rem' }}>
-                  <Card.Body>{this.state.temp}</Card.Body>
+                  <Card.Body>{this.state.temp} &deg;F</Card.Body>
                 </Card>
               </Col>
               <Col>
@@ -129,8 +141,8 @@ class App extends React.Component {
                       </Card>
                     </Col>
                     <Col>
-                      <Button variant='outline-dark' onClick={() => { ipcRenderer.send('KpUp') }}>⇧</Button> &nbsp;
-                      <Button variant='outline-dark' onClick={() => { ipcRenderer.send('KpDown') }}>⇩</Button>
+                      {KpUp} &nbsp;
+                      {KpDown}
                     </Col>
                   </Row>
               </Col>  
@@ -141,8 +153,8 @@ class App extends React.Component {
                     <Card.Body>{this.state.kI}</Card.Body>
                   </Card>
                   <Col>
-                    <Button variant='outline-dark' onClick={() => { ipcRenderer.send('KiUp') }}>⇧</Button> &nbsp;
-                    <Button variant='outline-dark' onClick={() => { ipcRenderer.send('KiDown') }}>⇩</Button>
+                      {KiUp} &nbsp;
+                      {KiDown}
                   </Col>
                 </Row>
               </Col>
@@ -158,15 +170,15 @@ class App extends React.Component {
             <Row>
               <Col>
                 <h2>Lights</h2>
-                <Form.Check type='switch' defaultChecked={false} onClick={e => { ipcRenderer.send('lightsOnOff', e.target.checked) }} width={10}/>
+                <Form.Check type='switch' disabled = {stat} defaultChecked={false} onClick={e => { ipcRenderer.send('lightsOnOff', e.target.checked) }} width={10}/>
               </Col>
               <Col>
                 <h2>Left Door</h2>
-                <Form.Check type='switch' defaultChecked={false}  onClick={e => { ipcRenderer.send('leftDoor', e.target.checked) }} width={80} onlabel='Open' offlabel='Close' />
+                <Form.Check type='switch' disabled = {stat} defaultChecked={false}  onClick={e => { ipcRenderer.send('leftDoor', e.target.checked) }} width={80} onlabel='Open' offlabel='Close' />
               </Col>
               <Col>
                 <h2>Right Door</h2>
-                <Form.Check type='switch' defaultChecked={false}  onClick={e => { ipcRenderer.send('rightDoor', e.target.checked) }} width={80} onlabel='Open' offlabel='Close' />
+                <Form.Check type='switch' disabled = {stat} defaultChecked={false}  onClick={e => { ipcRenderer.send('rightDoor', e.target.checked) }} width={80} onlabel='Open' offlabel='Close' />
               </Col>
             </Row>
           </Container>

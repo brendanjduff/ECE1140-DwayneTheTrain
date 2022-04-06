@@ -116,9 +116,9 @@ input.on('trainModel', (m,data) => {
     trainsDict[id].cmdSpeed = t['speedCmd']
     trainsDict[id].authority = t['authorityCmd']
     trainsDict[id].location = t['station']
-    // = t['rightPlatform']
-    // = t['leftPlatform']
-    // = t['underground']
+    //trainsDict[id] = t['rightPlatform']
+    //trainsDict[id] = t['leftPlatform']
+    //trainsDict[id] = t['underground']
   })
   trainsList.forEach(t => {t.powerCalc()})
   trainModel.shout('controllerSW', trainsList.map((t) => t.getMessage()))

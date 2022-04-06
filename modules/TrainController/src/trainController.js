@@ -1,9 +1,3 @@
-//////NOTES//////
-//note on line 108
-//create class with all these function except for get functions
-//remove 'export function' from all function names for correct syntax
-
-// Export functions
 export default class TrainController {
   constructor(id) {
     // Input Variables
@@ -49,12 +43,12 @@ export default class TrainController {
   }
   // Emergency Brake
   emerBrake () {
-    this.eBrake = true
-    return this.eBrake
+    this.eBrake = !this.eBrake
+    //return this.eBrake
   }
   // Service Brake
   serBrake () {
-    this.sBrake = true
+    this.sBrake = !this.sBrake
     return this.sBrake
   }
   // Increase temperature
@@ -78,7 +72,7 @@ export default class TrainController {
   // Turn lights on/off
   lightsOnOff (e) {
     console.log("lights" + e)
-    this.lights = e   //remove .target.checked and just call e for all check function 
+    this.lights = e  
     return this.lights
   }
   // Left door
