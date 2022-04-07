@@ -44,6 +44,8 @@
           "@electron-forge/plugin-webpack",
           {
             "mainConfig": "./webpack.main.config.js",
+            "port": "3002",
+            "loggerPort": "9002",
             "renderer": {
               "config": "./webpack.renderer.config.js",
               "entryPoints": [
@@ -81,6 +83,7 @@
     "bootstrap-switch-button-react": "^1.2.0",
     "electron-is-dev": "^2.0.0",
     "electron-squirrel-startup": "^1.0.0",
+    "messenger": "^0.0.9",
     "react": "^17.0.2",
     "react-bootstrap": "^2.1.2",
     "react-dom": "^17.0.2",

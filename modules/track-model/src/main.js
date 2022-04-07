@@ -87,6 +87,9 @@ class Block{
     this.circuitBroken = false;
     this.hasPower = true;
     this.heaterStatus = false;
+
+    this.speedCmd = 0
+    this.authCmd = 0
   }
   toggleStatus(){
     this.isOpen = !this.isOpen;
@@ -208,6 +211,7 @@ const messenger = require('messenger')
 const input = messenger.createListener(8004)
 const watchdog = messenger.createSpeaker(8000)
 const trainModel = messenger.createSpeaker(8005)
+const wayside = messenger.createSpeaker(8002)
 
 trainsList = []
 trainsDict = []
@@ -231,8 +235,8 @@ class Train {
     return {
       id: this.trainId,
       boardingPax: 0,
-      speedCmd: 45, //temp
-      authorityCmd: 10, //temp
+      speedCmd: greenLine.blocks[this.block].speedCmd,
+      authorityCmd: greenLine.blocks[this.block].authCmd,
       station: '', 
       rightPlatform: false,
       leftPlatform: false,
@@ -242,8 +246,14 @@ class Train {
   }
 }
 
-input.on('clock1', (m, data) => { // change to when received from wayside
-  trainModel.shout("trackModel", trainsList.map((t) => t.getMessage()))
+input.on('wayside', (m, data) => { 
+  greenLine.blocks.forEach((b) => {
+    b.speedCmd = data.cmdSpeed[b.blockNum]
+    b.authCmd = data.cmdAuth[b.blockNum]
+    // switches
+  })
+
+trainModel.shout("trackModel", trainsList.map((t) => t.getMessage()))
 })
 
 input.on('trainModel', (m, data) => {
@@ -253,12 +263,11 @@ input.on('trainModel', (m, data) => {
   data.forEach((t) => {
     const id = t.id
     trainsDict[id].updatePosition(t['distance'])
-    console.log(id + " moved "+t['distance'])
   })
   trainsList.forEach((t) => {
     greenLine.blocks[t.block].isOccupied = true
   })
-  // send to wayside
+  wayside.shout("trackModel", greenLine.blocks)
 })
 
 input.on('createTrain', (m, data) => {

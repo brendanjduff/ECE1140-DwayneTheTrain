@@ -2,7 +2,7 @@ const { app, BrowserWindow, ipcMain } = require('electron')
 const path = require('path')
 const isDev = require('electron-is-dev')
 
-var USING_HW = true
+var USING_HW = false
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (require('electron-squirrel-startup')) {
@@ -82,8 +82,8 @@ var suggestedAuth  = new Array(4).fill(2) //4 authorities for number of waysides
 var commandedAuth  = new Array(numBlocks).fill(2) //send authority to individual blocks
 
 //DORMONT STATION BLOCKS
-waysideDistroDCmdSpeed[72] = 0;
-waysideDistroDCmdAuth[72] = 0;
+commandedSpeed[72] = 0;
+commandedAuth[72] = 0;
 
 const messenger = require('messenger')
 const input = messenger.createListener(8002)    //our input
@@ -92,11 +92,8 @@ const toCtc = messenger.createSpeaker(8001)     //ctc
 const toHwws = messenger.createSpeaker(8003)    //hardware wayside controller
 const toTrack = messenger.createSpeaker(8004)   //track model
 
-setInterval(() => { watchdog.shout('waysideHW', true) }, 100)
-
-input.on('trackModel', (m, data) => {
-	blockOccupancy = data.map((b) => { b.isOccupied })
-	toCtc.shout('changeBlock', blockOccupancy)
+input.on('clock1', (m, data) => { // change to ctc received
+	// get stuff from ctc
 	
 	waysideAPLC()
 	waysideBPLC()
@@ -104,20 +101,26 @@ input.on('trackModel', (m, data) => {
 	waysideDPLC()
 	
 	updateCmdSpd()
-	
-	toTrack.shout('waysideSwP', switches)
-	toTrack.shout('cmdSpeed', commandedSpeed)
-	toTrack.shout('cmdAuth', commandedAuth)
+
+	toTrack.shout("wayside", { cmdSpeed: commandedSpeed, cmdAuth: commandedAuth, switches: switches })
+})
+
+input.on('trackModel', (m, data) => {
+	blockOccupancy = []
+	data.forEach((b) => {
+		blockOccupancy[b.blockNum - 1] = b.isOccupied
+	})
+	toCtc.shout('changeBlock', blockOccupancy)
 })
 
 input.on('hwWayside', (m, data) => {
 	switches[4] = data[4]
 })
 
-input.on('createTrain', (m, data) => {
+/*input.on('createTrain', (m, data) => {
 	suggestedSpeed.fill(data.speed);
 	suggestedAuth.fill(data.authority)
-})
+})*/ //Temp
 
 function waysideAPLC() {
 	if(USING_HW) {
@@ -148,19 +151,21 @@ function waysideDPLC() {
 }
 
 function updateCmdSpd() {
-	commandedSpeed = suggestedSpeed.map((a) => {suggestedSpeed})
+	commandedSpeed = suggestedSpeed
 	commandedAuth.fill(2)
 	
 	if(!arrived) {
-		waysideDistroDCmdSpeed[72] = 0;
-		waysideDistroDCmdAuth[72] = 0;
+		commandedSpeed[72] = 0;
+		commandedAuth[72] = 0;
 		
 		if(blockOccupancy[72] === true) {
 			arrived = true;
 			setTimeout(() => {
 				console.log("Train Departing Dormont");
-				waysideDistroDComSpeed[72] = waysideDistroDSugSpeed[72]
-			}, 2000)
+				commandedSpeed[72] = suggestedSpeed[72]
+			}, 40000)
 		}
 	}
 }
+
+setInterval(() => { watchdog.shout('waysideSW', true) }, 100)
