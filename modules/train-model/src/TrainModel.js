@@ -34,10 +34,7 @@ export default class TrainModel {
         leftDoors: false, // {open, closed}
         rightDoors: false, // {open, closed}
         lights: false, // {on, off}
-        temperature: 68, // °Fahrenheit
-        engineFailure: false, // true: failure
-        brakeFailure: false, // true: failure
-        signalFailure: false // true: failure
+        temperature: 68 // °Fahrenheit
       },
       outputs: {
         velocity: 0, // m/s
@@ -46,7 +43,10 @@ export default class TrainModel {
         station: '',
         rightPlatform: false,
         leftPlatform: false,
-        underground: false
+        underground: false,
+        engineFailure: false, // true: failure
+        brakeFailure: false, // true: failure
+        signalFailure: false // true: failure
       }
     }
     this.trackIntf = {

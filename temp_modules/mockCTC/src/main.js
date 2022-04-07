@@ -10,7 +10,7 @@ if (require('electron-squirrel-startup')) {
 const createWindow = () => {
   // Create the browser window.
   const mainWindow = new BrowserWindow({
-    width: 350,
+    width: 300,
     height: 200,
     show: false,
     webPreferences: {
@@ -81,7 +81,6 @@ ipcMain.on('createTrainHW', (event, arg) => {
   if(!hw) {
     trackModel.shout('createTrain', id)
     trainModel.shout('createTrain', { id: id, hw: true })
-    controllerSW.shout('createTrain', id)
     id++;
     hw = true;
   }

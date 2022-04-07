@@ -11,10 +11,10 @@ if (require('electron-squirrel-startup')) {
 const createWindow = () => {
   // Create the browser window.
   const mainWindow = new BrowserWindow({
-    width: 1280,
+    width: 600,
     height: 720,
-    minWidth: 600,
-    minHeight: 600,
+    minWidth: 300,
+    minHeight: 500,
     show: false,
 
     webPreferences: {
@@ -85,7 +85,7 @@ function createTrain (id, hw) {
   trainsDict[newTrain.trainId] = newTrain
   if (hw) {
     hwTrain = newTrain
-    hwTrainId = hwTrain.id
+    hwTrainId = hwTrain.trainId
   }
 }
 
@@ -104,10 +104,9 @@ input.on('trackModel', (m, data) => {
     trainsDict[id].receiveTrackInput(t)
     trainsDict[id].procTrackInputs()
     trainsDict[id].procControlOutputs()
-    if (hwTrainId === id) { outputHW = trainsDict[id].getControlOutputs() } else { outputSW.push(trainsDict[id].getControlOutputs()) }
+    if (hwTrainId === id) { hwtcOutput.shout('trainModel', trainsDict[id].getControlOutputs()) } else { outputSW.push(trainsDict[id].getControlOutputs()) }
   })
-  swtcOutput.shout('trainModel', outputSW)
-  hwtcOutput.shout('trainModel', outputHW)
+  swtcOutput.shout('trainModel', outputSW) 
 })
 
 input.on('controllerSW', (m, data) => {
