@@ -29,7 +29,7 @@ export default class TrainController {
     if (this.speed > 43) {
       this.speed = 43 
     }
-    console.log(this.speed)
+    //console.log(this.speed)
     return this.speed
   }
   // Decrease speed
@@ -38,7 +38,7 @@ export default class TrainController {
     if (this.speed < 0) {
       this.speed = 0
     }
-    console.log(this.speed)
+    //console.log(this.speed)
     return this.speed
   }
   // Emergency Brake
@@ -57,7 +57,7 @@ export default class TrainController {
     if (this.temp > 80) {
       this.temp = 80
     }
-    console.log(this.temp)
+    //console.log(this.temp)
     return this.temp
   }
   // Decrease temperature
@@ -66,24 +66,24 @@ export default class TrainController {
     if (this.temp < 62) {
       this.temp = 62
     }
-    console.log(this.temp)
+    //console.log(this.temp)
     return this.temp
   }
   // Turn lights on/off
   lightsOnOff (e) {
-    console.log("lights" + e)
+    //console.log("lights" + e)
     this.lights = e  
     return this.lights
   }
   // Left door
   leftDoor (e) {
-    console.log("ldoor" + e)
+    //console.log("ldoor" + e)
     this.leftD = e
       return this.leftD
   }
   // Right door
   rightDoor (e) {
-    console.log("rdoor" + e)
+    //console.log("rdoor" + e)
     this.rightD = e
       return this.rightD
   }
@@ -98,7 +98,7 @@ export default class TrainController {
   //Increase Kp
   KpUp () {
       this.kP = this.kP + 1
-      console.log(this.kP)
+      //console.log(this.kP)
       return this.kP
   }
   //Decrease Kp
@@ -107,13 +107,13 @@ export default class TrainController {
       if (this.kP < 0) {
         this.kP = 0
       }
-      console.log(this.kP)
+      //console.log(this.kP)
       return this.kP
   }
   //Increase Ki
   KiUp () {
       this.kI = this.kI + 1
-      console.log(this.kI)
+      //console.log(this.kI)
       return this.kI
   }
   //Decrease Ki
@@ -122,7 +122,7 @@ export default class TrainController {
       if (this.kI < 0) {
         this.kI = 0
       }
-      console.log(this.kI)
+      //console.log(this.kI)
       return this.kI
   }
 

@@ -1,0 +1,30 @@
+{
+  "name": "train-controller-hw",
+  "version": "1.0.0",
+  "description": "Communications for the Hardware Train Controler",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron . --trace-warnings"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:serialport/electron-serialport.git"
+  },
+  "keywords": [
+    "Electron",
+    "quick",
+    "start",
+    "tutorial",
+    "demo"
+  ],
+  "author": "GitHub",
+  "license": "CC0-1.0",
+  "devDependencies": {
+    "electron": "^17.0.0"
+  },
+  "dependencies": {
+    "messenger": "^0.0.9",
+    "serialport": "^10.3.0",
+    "tableify": "^1.1.1"
+  }
+}
