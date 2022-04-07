@@ -5,9 +5,9 @@ export default class TrainController {
     this.cmdSpeed = 0
     this.actSpeed = 0
     this.authority = 0
-    this.kP = 1
+    this.kP = 10000
     this.kI = 0
-    this.temp = 68
+    this.temp = 70
     this.speed = 0
     this.eBrake = false
     this.sBrake = false
