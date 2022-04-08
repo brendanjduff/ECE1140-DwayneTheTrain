@@ -17,10 +17,6 @@ export default class App extends React.Component {
       this.setState({ selTrain: arg.sel, trains: arg.trains })
     })
     this.intervalId = setInterval(() => { ipcRenderer.send('requestData') }, 1000 / updateRate)
-    if (!testUI) { // This block is for demonstration only
-      ipcRenderer.send('createTrain', true)
-      ipcRenderer.send('setClock', true)
-    }
     ipcRenderer.on('resetOverview', (event, arg) => {
       this.reset += 1
       ipcRenderer.send('reset', true)
@@ -35,7 +31,7 @@ export default class App extends React.Component {
   render () {
     return (
       <>
-        {testUI ? <TestHeader /> : ''}
+        {testMode ? <TestHeader /> : ''}
         <Tabs defaultActiveKey='overview' key={this.reset}>
           <Tab eventKey='overview' title='Overview'>
             <Overview trains={this.state.trains} />
