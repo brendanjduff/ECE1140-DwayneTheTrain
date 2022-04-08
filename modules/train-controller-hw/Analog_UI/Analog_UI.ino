@@ -44,7 +44,7 @@ int LastTMPButtonState_Down = 0;
 bool TMPButton = false;
 
 //KP Variables
-int KP = 0; 
+int KP = 25000; 
 int KPButtonState_Up = 0;
 int LastKPButtonState_Up = 0;
 int KPButtonState_Down = 0; 

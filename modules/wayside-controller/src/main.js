@@ -2,7 +2,7 @@ const { app, BrowserWindow, ipcMain } = require('electron')
 const path = require('path')
 const isDev = require('electron-is-dev')
 
-var USING_HW = false
+var USING_HW = true
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (require('electron-squirrel-startup')) {
@@ -92,7 +92,7 @@ const toCtc = messenger.createSpeaker(8001)     //ctc
 const toHwws = messenger.createSpeaker(8003)    //hardware wayside controller
 const toTrack = messenger.createSpeaker(8004)   //track model
 
-input.on('clock1', (m, data) => { // change to ctc received
+input.on('ctc', (m, data) => {
 	// get stuff from ctc
 	
 	waysideAPLC()
@@ -102,35 +102,36 @@ input.on('clock1', (m, data) => { // change to ctc received
 	
 	updateCmdSpd()
 
+  console.log(switches)
+
 	toTrack.shout("wayside", { cmdSpeed: commandedSpeed, cmdAuth: commandedAuth, switches: switches })
 })
 
 input.on('trackModel', (m, data) => {
-	blockOccupancy = []
 	data.forEach((b) => {
 		blockOccupancy[b.blockNum - 1] = b.isOccupied
 	})
-	toCtc.shout('changeBlock', blockOccupancy)
+
+	ctcOutput = []
+	data.forEach((b) => {
+		ctcOutput[b.blockNum] = {num: b.blockNum, isOccupied: b.isOccupied }
+	})
+
+	toCtc.shout('wayside', ctcOutput)
 })
 
-input.on('hwWayside', (m, data) => {
+input.on('waysideHW', (m, data) => {
 	switches[4] = data[4]
 })
 
-/*input.on('createTrain', (m, data) => {
-	suggestedSpeed.fill(data.speed);
+input.on('createTrain', (m, data) => {
+	suggestedSpeed.fill(data.speed)
 	suggestedAuth.fill(data.authority)
-})*/ //Temp
+})
 
 function waysideAPLC() {
 	if(USING_HW) {
-		var buffer = new ArrayBuffer(4).fill(0)
-		
-		for(var i = 0; i < 25; i++) {
-			buffer[i/8] |= blockOccupancy[i] << (i%8)
-		}
-		
-		toHwws.shout('blockOccupancyA', buffer)
+		toHwws.shout('waysideSW', blockOccupancy)
 	} else {
 		switches[4] = blockOccupancy[11]
 	}
@@ -150,22 +151,29 @@ function waysideDPLC() {
     switches[2] = blockOccupancy[99]
 }
 
+var arr2 = false
+
 function updateCmdSpd() {
-	commandedSpeed = suggestedSpeed
-	commandedAuth.fill(2)
-	
-	if(!arrived) {
-		commandedSpeed[72] = 0;
-		commandedAuth[72] = 0;
-		
-		if(blockOccupancy[72] === true) {
-			arrived = true;
-			setTimeout(() => {
-				console.log("Train Departing Dormont");
-				commandedSpeed[72] = suggestedSpeed[72]
-			}, 40000)
-		}
-	}
+    commandedSpeed = suggestedSpeed
+    commandedAuth.fill(2)
+    
+    commandedSpeed[71] = 7;
+    
+    if(!arrived) {
+        commandedSpeed[72] = 0;
+        commandedAuth[72] = 0;
+        
+
+        if(blockOccupancy[72] === true && !arr2) {
+            setTimeout(() => {
+                console.log("Train Departing Dormont");
+                commandedSpeed[72] = suggestedSpeed[72]
+                arrived = true;
+            }, 20000)
+        }
+
+		arr2 = true
+    } 
 }
 
 setInterval(() => { watchdog.shout('waysideSW', true) }, 100)

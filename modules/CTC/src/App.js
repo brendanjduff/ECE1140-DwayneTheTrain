@@ -44,7 +44,7 @@ export default class App extends React.Component { //set state initial values he
     <>
     <Container fluid>
       <Row>
-        <Col><Schedule block={this.state.block} arrivalHrs={this.state.arrivalHrs} arrivalMin={this.state.arrivalMin} departureHrs={this.state.departureHrs} departureMin={this.state.departureMin} speed={this.state.speed} authority={this.state.authority} destination={this.state.destination} /></Col>
+        <Col><Schedule block={this.state.block} arrivalHrs={this.state.arrivalHrs} arrivalMin={this.state.arrivalMin} departureHrs={this.state.departureHrs} departureMin={this.state.departureMin} speed={this.state.speed * 2.237} authority={this.state.authority} destination={this.state.destination} /></Col>
         {/*<Col><Card><Track /></Card></Col>*/}
         {/*<Col><Card>3 of three</Card></Col> */}
       </Row>

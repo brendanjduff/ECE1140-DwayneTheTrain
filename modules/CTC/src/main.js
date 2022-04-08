@@ -79,14 +79,11 @@ ipcMain.on('requestData', (event, arg) => { event.reply('fetchData', { // send p
 }) })
 
 function updateBlockOccupancy(data) {
-  let occupied = 0
-  for (let i = 0; i < data.length; i++) {
-    if(data[i]) {
-      occupied = i+1
-      break
+  data.forEach((b) => {
+    if(b.isOccupied) {
+      t.blockNum = b.num
     }
-  }
-  t.blockNum = occupied
+  })
 }
 
 const messenger = require('messenger')
@@ -102,12 +99,12 @@ setInterval(() => { watchdog.shout('ctc', true) }, 100)
 
 ipcMain.on('createTrain', (event, arg) => {
   t.isDispatched = true
-  t.blockNum = 62
+  t.blockNum = 63
   t.destination = 'Dormont'
   t.calculateSpeedAuth()
   trackModel.shout('createTrain', createTrainID) //create train is the data that i send, put suggested speed and auth in place of that
-  waysideHW.shout('createTrain', t)
-  waysideSW.shout('createTrain', t)
+  waysideHW.shout('createTrain', t)//???
+  waysideSW.shout('createTrain', t)//???
   trainModel.shout('createTrain', { id: createTrainID, hw: false })
   controllerSW.shout('createTrain', createTrainID)
   createTrainID += 1
@@ -126,6 +123,10 @@ ipcMain.on('departTimeMin', (event, arg) => {
   t.departureTimeMinutes = arg
 })
 
-input.on('changedBlock', (m, data) => { // change input message when integrated
+input.on('wayside', (m, data) => {
   updateBlockOccupancy(data)
+})
+
+input.on('clock1', (m, data) => {
+  waysideSW.shout('ctc')
 })

@@ -37,9 +37,9 @@ export default class Train {
       // return speed and authority
       let interspeed = ((distance/sec) * 2.237).toFixed(3) // meters/s to miles/h
       if(interspeed <= 45) {
-          this.speed = 45
+          this.speed = 45 / 2.237
       } else {
-          this.speed = interspeed
+          this.speed = (interspeed / 2.237)
       }
       this.authority = [distroA, distroB, distroC, distroD]
   }

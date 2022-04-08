@@ -72,16 +72,26 @@ const toTrack = messenger.createSpeaker(8004)   //track model
 
 setInterval(() => { watchdog.shout('waysideHW', true) }, 100)
 
-input.on('blockOccupancyA', (m, data) => {
-    arduino.write(data)
+buffer = new Uint8Array(4)
+
+input.on('waysideSW', (m, data) => {
+    buffer.fill(0)
+    for(var i = 0; i < 25; i++) {
+        buffer[i/8] |= data[i] << (i%8)
+    } 
 })
+
+setInterval(() => {
+    arduino.write(buffer)
+    console.log("WRITE: " + buffer)
+}, 500)
 
 SerialPort.list((err, ports) => {
     console.log(ports)
 })
 
 const arduino = new SerialPort({
-    path: 'COM3',
+    path: 'COM7',
     baudRate: 9600
 })
 
@@ -96,9 +106,10 @@ arduino.on('readable', () => {
     if(byteCount === 0) {
         for(var i = 0; i < 6; i++) {
             switches[i] = (((data >> i) & 1) === 1)
+            console.log("R: " + (((data >> i) & 1) === 1))
         }
 
-        toSwws.shout('hwWayside', switches)
+        toSwws.shout('waysideHW', switches)
     }
 
     byteCount++;

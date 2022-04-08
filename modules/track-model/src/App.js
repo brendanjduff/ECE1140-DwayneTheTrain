@@ -22,9 +22,6 @@ export default class App extends React.Component {
   
   render() { return(<div>
     <h1>{this.state.ready ? this.state.greenLine.name : ""}</h1>
-    <h2><Button size = "sm" variant="secondary" onClick = {()=> {demo1()}}>Start Demo A</Button>
-    <Button size = "sm" variant="secondary" onClick = {()=> {demo2()}}>Start Demo B</Button>
-    <Button size = "sm" variant="secondary" onClick = {()=> {resetBlocks()}}>Reset Occupancy</Button></h2>
     {this.state.ready ? this.state.greenLine.blocks.map((b)=><ReactBlock Block = {b} />) : ""}
   </div>
   )}
@@ -50,7 +47,7 @@ class ReactBlock extends React.Component{
   render(){
     return(
       <>
-      <Button size = "sm" variant={this.props.Block.isOccupied ? "primary" : "secondary"} onClick = {this.handleShow}>{this.props.Block.blockNum}</Button>
+      <Button size = "sm" variant={this.props.Block.isOccupied ? "primary" : "success"} onClick = {this.handleShow}>{this.props.Block.blockNum}</Button>
       <Modal show={this.state.show} onHide={this.handleClose}>
         <Modal.Header closeButton>
           <Modal.Title>Block {this.props.Block.blockNum}</Modal.Title>
