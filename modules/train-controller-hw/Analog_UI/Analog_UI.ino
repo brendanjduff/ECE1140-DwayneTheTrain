@@ -1,4 +1,3 @@
-
 #include "LiquidCrystal_I2C.h"
 #include <Wire.h>
 
@@ -19,6 +18,9 @@ const int  Hand_Brake_button = 24;
 const int  Emergency_Brake_button = 22; 
 const int Driver_Mode_button = 26;
 const int Automatic_Mode_button = 27;
+const int Engine_Failure = 28;
+const int Brake_Failure = 29;
+const int Third_Failure = 30;
 
 //avoid Pins 7 and 13
 //incoming from Train Module
@@ -27,8 +29,21 @@ const int Automatic_Mode_button = 27;
 int err;
 int cumErr;
 
+//*****KEY******//
+//Input Value = 0;//
+//Input Button Up = 0;//
+//Activate action for Button Up = 0;//
+//Input Button Down = 0;//
+//Activate action for Button Down = 0;//
+//Up || Down val = 0;//
+//*******OR******//
+//Input Value = 0;//
+//Input Button = 0;//
+//Activate action for Button = 0;//
+//actual button val = 0;//
+
 //Speed Variables
-int SPD = 0; 
+int SPD = 0;
 int SPDButtonState_Up = 0;
 int LastSPDButtonState_Up = 0;
 int SPDButtonState_Down = 0; 
@@ -44,7 +59,7 @@ int LastTMPButtonState_Down = 0;
 bool TMPButton = false;
 
 //KP Variables
-int KP = 25000; 
+int KP = 0; 
 int KPButtonState_Up = 0;
 int LastKPButtonState_Up = 0;
 int KPButtonState_Down = 0; 
@@ -89,19 +104,26 @@ int TLButtonState = 0;
 int LastTLButtonState = 0;
 bool TLButton = false;
 
-//Tunnel Light Variables
+//Driver/Engineer Variables
 bool DM = false;
 int DMButtonState = 0; 
 int LastDMButtonState = 0;
 bool DMButton = false;
 
-//A/M Variables
+//Automatic/Manual Variables
 bool AM = false;
 int AMButtonState = 0; 
 int LastAMButtonState = 0;
 bool AMButton = false;
 
 int CMDSpd, ACTSpd;
+int SpdLim = 1000;
+int Authority = 1;
+bool Beacon_Lights, Beacon_LDoor, Beacon_RDoor;
+
+//LED vars
+bool Engine_Fail_Flag, Brake_Fail_Flag, Third_Fail_Flag;
+
 
 void setup()
 {
@@ -120,8 +142,12 @@ void setup()
   pinMode( Emergency_Brake_button, INPUT_PULLUP);
   pinMode( Right_Door_button, INPUT_PULLUP);
   pinMode( Left_Door_button, INPUT_PULLUP);
+  pinMode( Driver_Mode_button, INPUT_PULLUP);
   pinMode( Automatic_Mode_button, INPUT_PULLUP);
-  CMDSpd = 0;
+  pinMode( Engine_Failure, OUTPUT);
+  pinMode( Brake_Failure, OUTPUT);
+  pinMode( Third_Failure, OUTPUT);
+  CMDSpd = 5;
   ACTSpd = 0;
 }
 
@@ -136,6 +162,15 @@ void loop()
     CMDSpd = ((String)token1).toInt();
     char * token2 = strtok(NULL, ",");
     ACTSpd = ((String)token2).toInt();
+    //char * token3 = strtok(NULL, ",");
+    //IntAuthority = ((String)token2).toInt();
+    //IntEngineFail
+    //IntBrakeFail
+    //IntThirdFail
+    //IntTunnelLights
+    //IntLDoors
+    //IntRDoors
+    //SpdLim
   }
    calcPower(CMDSpd, ACTSpd);
    CSPDUp(); 
@@ -154,56 +189,110 @@ void loop()
    CDM();
    CAM();
    //if button was clicked
-   if(SPDButton){
-      announceStation();
-       SPDButton = false;
-       delay(50);
+   if(Authority == 0){
+      SPD = 0;
    }
-   if(TMPButton){
-      TMPButton = false;
-      delay(50);
+   if(Engine_Fail_Flag == false){
+      digitalWrite(Engine_Failure, LOW);
    }
-  if(KPButton){
-      KPButton = false;
-      delay(50);
+   else{
+      digitalWrite(Engine_Failure, HIGH);
    }
-   if(KIButton){
-      KIButton = false;
-      delay(50);
+   
+   if(Brake_Fail_Flag == false){
+      digitalWrite(Brake_Failure, LOW);
    }
-   if(EBRButton){
-    EBRButton = false;
-    delay(50);
+   else{
+      digitalWrite(Brake_Failure, HIGH);
    }
-   if(HBRButton){
-    HBRButton = false;
-    delay(50);
+
+   if(Third_Fail_Flag == false){
+      digitalWrite(Third_Failure, LOW);
    }
-   if(LDRButton){
-    LDRButton = false;
-    delay(50);
+   else{
+      digitalWrite(Third_Failure, HIGH);
    }
-   if(RDRButton){
-    RDRButton = false;
-    delay(50);
+   //if Automatic is On
+   if(AM == 1){
+      SPD == CMDSpd;
+      //if TL != 
+      TL = Beacon_Lights;
+      LDR = Beacon_LDoor;
+      RDR = Beacon_RDoor;
    }
-   if(TLButton){
-    TLButton = false;
-    delay(50);
+   //if Manual is On
+   else{
+      //if Speed button is clicked
+      if(SPDButton){
+          announceStation();
+          SPDButton = false;
+          delay(50);
+      }
+      //if Temperature button is clicked
+      if(TMPButton){
+          TMPButton = false;
+          delay(50);
+      }
+      //if kP button is clicked
+      if(KPButton){
+          KPButton = false;
+          delay(50);
+      }
+      //if kI button is clicked
+      if(KIButton){
+          KIButton = false;
+          delay(50);
+      }
+      //if Emergency break is clicked
+      if(EBRButton){
+        EBRButton = false;
+        delay(50);
+      }
+      //if Hand Brake is clicked
+      if(HBRButton){
+        HBRButton = false;
+        delay(50);
+      }
+      //if Left Door Button is clicked
+      if(LDRButton){
+        LDRButton = false;
+        delay(50);
+      }
+      //if Right Door button is clicked
+      if(RDRButton){
+        RDRButton = false;
+        delay(50);
+      }
+      //if tunnel lights button is clicked
+      if(TLButton){
+        TLButton = false;
+        delay(50);
+      }
+      //if User button is clicked
+      if(DMButton){
+        DMButton = false;
+        delay(50);
+      }
+      //if Mode button is clicked
+      if(AMButton){
+        AMButton = false;
+        delay(50);
+      }
    }
-   if(DMButton){
-    DMButton = false;
-    delay(50);
-   }
-   if(AMButton){
-    AMButton = false;
-    delay(50);
+   //actually works here, doesnt work if other one does not exist
+   if(AM == 1){
+    SPD = CMDSpd;
+    TL = Beacon_Lights;
+    LDR = Beacon_LDoor;
+    RDR = Beacon_RDoor;
    }
    lcd.clear();
-   lcd.print("CMD: ");
+   lcd.print("CMD:");
    lcd.print(CMDSpd);
-   lcd.print(" ACT: ");
+   lcd.print(" ACT:");
    lcd.print(ACTSpd);
+   lcd.print(" A:");
+   lcd.print(Authority);
    delay(50);
 }
 
@@ -215,7 +304,7 @@ void CSPDUp()
   SPDButtonState_Up = digitalRead(Speed_Up_button);
   if (SPDButtonState_Up != LastSPDButtonState_Up) {
     if (SPDButtonState_Up == LOW) {
-      if(SPD < 44){
+      if(SPD < SpdLim){
         SPD++;
       }
       SPDButton = true;
@@ -239,7 +328,7 @@ void CSPDDown()
   SPDButtonState_Down = digitalRead(Speed_Down_button);
   if (SPDButtonState_Down != LastSPDButtonState_Down) {
     if (SPDButtonState_Down == LOW) {
-      if(SPD > 0){
+      if(SPD < SpdLim){
         SPD--;
       }
       SPDButton = true;
@@ -257,9 +346,18 @@ void CSPDDown()
 }
 }
 //Power Commands
+int max_train_weight, min_train_weight, max_power, min_power;
 void calcPower(int cmdSpd, int actSpd){
+  //max_cap_weight = 20000;
+  //train_weight = 40000;
+  max_train_weight = 60000;
+  //accepted_var = 20000;
+  min_train_weight = 20000;
+  max_power = .5 * SPD * max_train_weight * max_train_weight;
+  min_power = .5 * SPD * min_train_weight * min_train_weight;
   err = cmdSpd - actSpd;
   cumErr = cumErr + err;
+  //if(KP*err+KI*cumErr < 480000 && KP*err+KI*cumErr < max_power && KP*err+KI*cumErr > min_power){
   if(KP*err+KI*cumErr < 480000){
     int PWR = KP*err+KI*cumErr;
     Serial.print("Power:");
@@ -322,7 +420,7 @@ void CTMPDown()
   //save button state
   LastTMPButtonState_Down = TMPButtonState_Down;
 }
-
+//KP commands
 void CKPUp()
 {
   if(DM == true){
@@ -343,6 +441,7 @@ void CKPUp()
   LastKPButtonState_Up = KPButtonState_Up;
 }
 }
+
 void CKPDown()
 {
   if(DM == true){
@@ -361,7 +460,7 @@ void CKPDown()
   LastKPButtonState_Down = KPButtonState_Down;
 }
 }
-
+//Ki Commands
 void CKIUp()
 {
   if(DM == true){
@@ -403,7 +502,7 @@ void CKIDown()
   LastKIButtonState_Down = KIButtonState_Down;
 }
 }
-
+//Emergency brake Command
 void CEBr()
 {
   EBRButtonState = digitalRead(Emergency_Brake_button);
@@ -431,7 +530,7 @@ void CEBr()
   //save button state
   LastEBRButtonState = EBRButtonState;
 }
-
+//Hand Brake Command
 void CHBr()
 {
   HBRButtonState = digitalRead(Hand_Brake_button);
@@ -458,7 +557,7 @@ void CHBr()
   //save button state
   LastHBRButtonState = HBRButtonState;
 }
-
+//Door Commands
 void CLDr()
 {
   LDRButtonState = digitalRead(Left_Door_button);
@@ -512,7 +611,7 @@ void CRDr()
   //save button state
   LastRDRButtonState = RDRButtonState;
 }
-
+//Lights Command
 void CTL()
 {
   TLButtonState = digitalRead(Tunnel_Lights_button);
@@ -539,7 +638,7 @@ void CTL()
   //save button state
   LastTLButtonState = TLButtonState;
 }
-
+//announce station function
 void announceStation(){
   if(SPD == 0){
     if(EBR == false){
@@ -548,7 +647,7 @@ void announceStation(){
     }
   }
 }
-
+//User Mode Command
 void CDM()
 {
   DMButtonState = digitalRead(Driver_Mode_button);
