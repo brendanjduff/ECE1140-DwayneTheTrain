@@ -59,7 +59,7 @@ int LastTMPButtonState_Down = 0;
 bool TMPButton = false;
 
 //KP Variables
-int KP = 0; 
+int KP = 100000; 
 int KPButtonState_Up = 0;
 int LastKPButtonState_Up = 0;
 int KPButtonState_Down = 0; 
@@ -162,15 +162,17 @@ void loop()
     CMDSpd = ((String)token1).toInt();
     char * token2 = strtok(NULL, ",");
     ACTSpd = ((String)token2).toInt();
-    //char * token3 = strtok(NULL, ",");
-    //IntAuthority = ((String)token2).toInt();
-    //IntEngineFail
-    //IntBrakeFail
-    //IntThirdFail
+    char * token3 = strtok(NULL, ",");
+    Authority = ((String)token3).toInt();
+    char * token4 = strtok(NULL, ",");
+    Engine_Fail_Flag = ((String)token4).toInt() == 1;
+    char * token5 = strtok(NULL, ",");
+    Brake_Fail_Flag = ((String)token5).toInt() == 1;
+    char * token6 = strtok(NULL, ",");
+    Third_Fail_Flag = ((String)token6).toInt() == 1;
     //IntTunnelLights
     //IntLDoors
     //IntRDoors
-    //SpdLim
   }
    calcPower(CMDSpd, ACTSpd);
    CSPDUp(); 
@@ -212,16 +214,8 @@ void loop()
    else{
       digitalWrite(Third_Failure, HIGH);
    }
-   //if Automatic is On
-   if(AM == 1){
-      SPD == CMDSpd;
-      //if TL != 
-      TL = Beacon_Lights;
-      LDR = Beacon_LDoor;
-      RDR = Beacon_RDoor;
-   }
    //if Manual is On
-   else{
+   if(AM != 1){
       //if Speed button is clicked
       if(SPDButton){
           announceStation();
