@@ -71,6 +71,9 @@ const trainModel = messenger.createSpeaker(8005);
 var actSpeed = 0
 var cmdSpeed = 0
 var authority = 0
+var engineFailure = 0
+var brakeFailure = 0
+var signalFailure = 0
 
 // outputs
 var powerCmd = 0
@@ -93,6 +96,9 @@ input.on('trainModel', (m, data) => {
     actSpeed = data['velocity']
     cmdSpeed = data['speedCmd']
     authority = data['authorityCmd']
+    engineFailure = data['engineFailure'] ? 1 : 0
+    brakeFailure = data['brakeFailure'] ? 1 : 0
+    signalFailure = data['signalFailure'] ? 1 : 0
 
     trainModel.shout('controllerHW', {
         powerCmd: powerCmd,
@@ -146,8 +152,8 @@ port.on('readable', function() {
     }
 })
 
-setInterval(() => {port.write(cmdSpeed.toFixed(0)+','+actSpeed.toFixed(0))
-console.log("SENDING: " + cmdSpeed.toFixed(0)+','+actSpeed.toFixed(0))}, 5000)
+setInterval(() => {port.write(cmdSpeed.toFixed(0)+','+actSpeed.toFixed(0)+','+authority+','+engineFailure+','+brakeFailure+','+signalFailure)
+console.log("SENDING: "+cmdSpeed.toFixed(0)+','+actSpeed.toFixed(0)+','+authority+','+engineFailure+','+brakeFailure+','+signalFailure)}, 5000)
 
 setInterval(() => { watchdog.shout('controllerHW', true) }, 100)
 
