@@ -9,14 +9,12 @@ export default class TrainController {
     this.kI = 0
     this.temp = 70
     this.speed = 0
-    /*
     this.engine = false
     this.brakes = false
     this.signal = false
-    */
-    this.rightP
-    this.leftP
-    this.underG
+    this.rightP = false
+    this.leftP = false
+    this.underG = false
     this.eBrake = false
     this.sBrake = false
     this.lights = false
@@ -220,13 +218,13 @@ export default class TrainController {
   // Backend Functions
   //Right platform
   rightPlat () {
-    if(this.automatic == true && this.rightP == true) {
+    if(this.automatic == true && this.rightP == true && this.actSpeed == 0) {
       this.rightD = true
     }
   }
   //Left platform
   leftPlat () {
-    if(this.automatic == true && this.leftP == true) {
+    if(this.automatic == true && this.leftP == true && this.actSpeed == 0) {
       this.leftD = true
     }
   }
@@ -234,6 +232,17 @@ export default class TrainController {
   underGround () {
     if(this.automatic == true && this.underG == true) {
       this.lights = true
+    }
+  }
+  //Stop when authoriy is 0
+  stop () {
+    if (this.authority == 0) {
+      while(this.actSpeed > 0) {
+        this.actSpeed--
+      }
+      while(this.speed > 0) {
+        this.speed--
+      }
     }
   }
   // Power Calculation

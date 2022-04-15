@@ -90,13 +90,13 @@ class App extends React.Component {
                       </Card>  
                     </Col>
                     <Col>
-                      <h2>Brake</h2>
+                      <h2>Brakes</h2>
                       <Card style={{ width: '10rem' }}>
                         <Card.Body>{this.state.brakes ? "FAIL!" : "SAFE"}</Card.Body>
                       </Card>  
                     </Col>
                     <Col>
-                      <h2>Signal</h2>
+                      <h2>Signals</h2>
                       <Card style={{ width: '10rem' }}>
                         <Card.Body>{this.state.signal ? "FAIL!" : "SAFE"}</Card.Body>
                       </Card>  
