@@ -124,5 +124,6 @@ input.on('trainModel', (m, data) => {
     trainsDict[id].signal = t['signalFailure']
   })
   trainsList.forEach(t => { t.powerCalc() })
+  trainsList.forEach(t => { t.stop() })
   trainModel.shout('controllerSW', trainsList.map((t) => t.getMessage()))
 })
