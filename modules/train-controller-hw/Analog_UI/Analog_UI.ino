@@ -123,6 +123,7 @@ bool Beacon_Lights, Beacon_LDoor, Beacon_RDoor;
 
 //LED vars
 bool Engine_Fail_Flag, Brake_Fail_Flag, Third_Fail_Flag;
+int IntTunnelLights, IntRDoors, IntLDoors;
 
 
 void setup()
@@ -165,14 +166,19 @@ void loop()
     char * token3 = strtok(NULL, ",");
     Authority = ((String)token3).toInt();
     char * token4 = strtok(NULL, ",");
-    Engine_Fail_Flag = ((String)token4).toInt() == 1;
+    Engine_Fail_Flag = ((String)token4).toInt();
     char * token5 = strtok(NULL, ",");
-    Brake_Fail_Flag = ((String)token5).toInt() == 1;
+    Brake_Fail_Flag = ((String)token5).toInt();
     char * token6 = strtok(NULL, ",");
-    Third_Fail_Flag = ((String)token6).toInt() == 1;
-    //IntTunnelLights
-    //IntLDoors
-    //IntRDoors
+    Third_Fail_Flag = ((String)token6).toInt();
+    //char * token7 = strtok(NULL, ",");
+    //IntTunnelLights = ((String)token7).toInt();
+    //char * token8 = strtok(NULL, ",");
+    //IntRDoors = ((String)token8).toInt();
+    //char * token9 = strtok(NULL, ",");
+    //IntLDoors = ((String)token9).toInt();
+    //char * token10 = strtok(NULL, ",");
+    //IntStation = ((String)token10).toInt();
   }
    calcPower(CMDSpd, ACTSpd);
    CSPDUp(); 
@@ -191,9 +197,6 @@ void loop()
    CDM();
    CAM();
    //if button was clicked
-   if(Authority == 0){
-      SPD = 0;
-   }
    if(Engine_Fail_Flag == false){
       digitalWrite(Engine_Failure, LOW);
    }
@@ -274,11 +277,62 @@ void loop()
       }
    }
    //actually works here, doesnt work if other one does not exist
+   //fixed this bug^^
    if(AM == 1){
-    SPD = CMDSpd;
-    TL = Beacon_Lights;
-    LDR = Beacon_LDoor;
-    RDR = Beacon_RDoor;
+   SPD = CMDSpd;
+   if(CMDSpd == 0){
+      HBR = true;
+      Serial.print("sBrake:On");
+   }
+   if(Authority == 0){
+      EBR = true;
+      Serial.print("eBrake:On");
+   }
+   if((int)TL != IntTunnelLights){
+      if(IntTunnelLights == 1){
+        TL = true;
+      }
+      else{
+        TL = false;
+      }
+      Serial.print("Tunnel Lights:");
+      if(TL == true){
+        Serial.print("On");
+      }
+      else{
+        Serial.print("Off");
+      }
+   }
+   if((int)LDR != IntLDoors){
+      if(IntLDoors == 1){
+        LDR = true;
+      }
+      else{
+        LDR = false;
+      }
+      Serial.print("Left Door:");
+      if(LDR == true){
+        Serial.print("Open");
+      }
+      else{
+        Serial.print("Closed");
+      }
+   }
+   if((int)RDR != IntRDoors){
+      if(IntRDoors == 1){
+        RDR = true;
+      }
+      else{
+        RDR = false;
+      }
+      Serial.print("Right Door:");
+      if(RDR == true){
+        Serial.print("Open");
+      }
+      else{
+        Serial.print("Closed");
+      }
+   }
    }
    lcd.clear();
    lcd.print("CMD:");
@@ -298,13 +352,14 @@ void CSPDUp()
   SPDButtonState_Up = digitalRead(Speed_Up_button);
   if (SPDButtonState_Up != LastSPDButtonState_Up) {
     if (SPDButtonState_Up == LOW) {
-      if(SPD < SpdLim){
+      if(SPD < CMDSpd){
         SPD++;
       }
       SPDButton = true;
       lcd.setCursor(0, 1);
       lcd.print("Speed: ");
       lcd.print(SPD);
+      lcd.print("m/s");
       delay(50);
     } 
     else {
@@ -322,13 +377,14 @@ void CSPDDown()
   SPDButtonState_Down = digitalRead(Speed_Down_button);
   if (SPDButtonState_Down != LastSPDButtonState_Down) {
     if (SPDButtonState_Down == LOW) {
-      if(SPD < SpdLim){
+      if(SPD < 45){
         SPD--;
       }
       SPDButton = true;
       lcd.setCursor(0, 1);
       lcd.print("Speed: ");
       lcd.print(SPD);
+      lcd.print("m/s");
       delay(50);
     } 
     else {
@@ -381,7 +437,7 @@ void CTMPUp()
       lcd.setCursor(0, 1);
       lcd.print("Temp:");
       lcd.print(TMP);
-      lcd.print(";");
+      lcd.print("F");
     } 
     else {
     }
@@ -406,6 +462,7 @@ void CTMPDown()
       lcd.setCursor(0, 1);
       lcd.print("Temp:");
       lcd.print(TMP);
+      lcd.print("F");
     } 
     else {
     }
@@ -634,7 +691,7 @@ void CTL()
 }
 //announce station function
 void announceStation(){
-  if(SPD == 0){
+  if(SPD == 0){//and if At_station = true
     if(EBR == false){
     lcd.setCursor(0, 1);
     lcd.print("Arrived At Station");
