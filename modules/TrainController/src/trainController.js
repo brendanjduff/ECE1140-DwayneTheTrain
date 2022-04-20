@@ -48,6 +48,9 @@ export default class TrainController {
     if (this.speed > 43) {
       this.speed = 43
     }
+    else if (this.speed > this.cmdSpeed) {
+      this.speed = this.cmdSpeed
+    }
     // console.log(this.speed)
     return this.speed
   }
@@ -236,13 +239,9 @@ export default class TrainController {
   }
   //Stop when authoriy is 0
   stop () {
-    if (this.authority == 0) {
-      while(this.actSpeed > 0) {
-        this.actSpeed--
-      }
-      while(this.speed > 0) {
-        this.speed--
-      }
+    if (this.automatic && (this.authority === 0 || this.cmdSpeed === 0)) {
+      this.sBrake = true
+      this.speed = 0
     }
   }
   // Power Calculation
