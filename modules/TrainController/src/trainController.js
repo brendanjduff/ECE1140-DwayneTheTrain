@@ -45,12 +45,12 @@ export default class TrainController {
   // Increase speed
   spdUp () {
     this.speed = this.speed + 1
-    if (this.speed > 43 || this.speed > this.cmdSpeed) {
+    if (this.speed > 43) {
       this.speed = 43
     }
-    //elsif (this.speed > this.cmdSpeed) {
-    //  this.speed = this.cmdSpeed
-    //}
+    else if (this.speed > this.cmdSpeed) {
+      this.speed = this.cmdSpeed
+    }
     // console.log(this.speed)
     return this.speed
   }
