@@ -67,7 +67,7 @@ int LastKPButtonState_Down = 0;
 bool KPButton = false;
 
 //KI Variables
-int KI = 0; 
+long KI = 0; 
 int KIButtonState_Up = 0;
 int LastKIButtonState_Up = 0;
 int KIButtonState_Down = 0; 
@@ -150,10 +150,10 @@ void setup()
   pinMode( Third_Failure, OUTPUT);
   CMDSpd = 5;
   ACTSpd = 0;
+  EBR = false;
 }
 
 void loop()
-
 {
   //calcPower(CMDSpd, ACTSpd, cumErr, err);
   //Check all button states
@@ -171,12 +171,12 @@ void loop()
     Brake_Fail_Flag = ((String)token5).toInt();
     char * token6 = strtok(NULL, ",");
     Third_Fail_Flag = ((String)token6).toInt();
-    //char * token7 = strtok(NULL, ",");
-    //IntTunnelLights = ((String)token7).toInt();
-    //char * token8 = strtok(NULL, ",");
-    //IntRDoors = ((String)token8).toInt();
-    //char * token9 = strtok(NULL, ",");
-    //IntLDoors = ((String)token9).toInt();
+    char * token7 = strtok(NULL, ",");
+    IntTunnelLights = ((String)token7).toInt();
+    char * token8 = strtok(NULL, ",");
+    IntRDoors = ((String)token8).toInt();
+    char * token9 = strtok(NULL, ",");
+    IntLDoors = ((String)token9).toInt();
     //char * token10 = strtok(NULL, ",");
     //IntStation = ((String)token10).toInt();
   }
@@ -281,57 +281,55 @@ void loop()
    if(AM == 1){
    SPD = CMDSpd;
    if(CMDSpd == 0){
-      HBR = true;
-      Serial.print("sBrake:On");
+      if(!HBR) {
+        HBR = true;
+        Serial.print("sBrake:1;");
+      } 
+   } else if (HBR) {
+     HBR = false;
+     Serial.print("sBrake:0;");
    }
    if(Authority == 0){
-      EBR = true;
-      Serial.print("eBrake:On");
+      if(!EBR) {
+        EBR = true;
+        Serial.print("eBrake:1;");
+      }
+   } else if (EBR) {
+     EBR = false;
+     Serial.print("eBrake:0;");
    }
    if((int)TL != IntTunnelLights){
       if(IntTunnelLights == 1){
         TL = true;
-      }
-      else{
+        Serial.print("Lights:1;");
+      } else {
         TL = false;
-      }
-      Serial.print("Tunnel Lights:");
-      if(TL == true){
-        Serial.print("On");
-      }
-      else{
-        Serial.print("Off");
+        Serial.print("Lights:0;");
       }
    }
    if((int)LDR != IntLDoors){
-      if(IntLDoors == 1){
+      if(IntLDoors == 1 && ACTSpd == 0){
         LDR = true;
-      }
-      else{
+        Serial.print("lDoors:1;");
+      } else if (LDR) {
         LDR = false;
+        Serial.print("lDoors:0;");
       }
-      Serial.print("Left Door:");
-      if(LDR == true){
-        Serial.print("Open");
-      }
-      else{
-        Serial.print("Closed");
-      }
+   } else if (ACTSpd != 0 && LDR) {
+     LDR = false;
+     Serial.print("lDoors:0;");
    }
    if((int)RDR != IntRDoors){
-      if(IntRDoors == 1){
+      if(IntRDoors == 1 && ACTSpd == 0){
         RDR = true;
-      }
-      else{
+        Serial.print("rDoors:1;");
+      } else if (RDR) {
         RDR = false;
+        Serial.print("rDoors:0;");
       }
-      Serial.print("Right Door:");
-      if(RDR == true){
-        Serial.print("Open");
-      }
-      else{
-        Serial.print("Closed");
-      }
+   } else if (ACTSpd != 0 && RDR) {
+     RDR = false;
+     Serial.print("rDoors:0;");
    }
    }
    lcd.clear();
