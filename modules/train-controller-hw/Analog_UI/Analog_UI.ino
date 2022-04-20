@@ -59,7 +59,7 @@ int LastTMPButtonState_Down = 0;
 bool TMPButton = false;
 
 //KP Variables
-int KP = 100000; 
+long KP = 100000; 
 int KPButtonState_Up = 0;
 int LastKPButtonState_Up = 0;
 int KPButtonState_Down = 0; 
@@ -67,7 +67,7 @@ int LastKPButtonState_Down = 0;
 bool KPButton = false;
 
 //KI Variables
-int KI = 0; 
+long KI = 0; 
 int KIButtonState_Up = 0;
 int LastKIButtonState_Up = 0;
 int KIButtonState_Down = 0; 
@@ -123,7 +123,7 @@ bool Beacon_Lights, Beacon_LDoor, Beacon_RDoor;
 
 //LED vars
 bool Engine_Fail_Flag, Brake_Fail_Flag, Third_Fail_Flag;
-int IntTunnelLights, IntRDoors, IntLDoors;
+int IntTunnelLights, IntRDoors, IntLDoors, IntStation;
 
 
 void setup()
@@ -150,10 +150,10 @@ void setup()
   pinMode( Third_Failure, OUTPUT);
   CMDSpd = 5;
   ACTSpd = 0;
+  EBR = false;
 }
 
 void loop()
-
 {
   //calcPower(CMDSpd, ACTSpd, cumErr, err);
   //Check all button states
@@ -171,12 +171,12 @@ void loop()
     Brake_Fail_Flag = ((String)token5).toInt();
     char * token6 = strtok(NULL, ",");
     Third_Fail_Flag = ((String)token6).toInt();
-    //char * token7 = strtok(NULL, ",");
-    //IntTunnelLights = ((String)token7).toInt();
-    //char * token8 = strtok(NULL, ",");
-    //IntRDoors = ((String)token8).toInt();
-    //char * token9 = strtok(NULL, ",");
-    //IntLDoors = ((String)token9).toInt();
+    char * token7 = strtok(NULL, ",");
+    IntTunnelLights = ((String)token7).toInt();
+    char * token8 = strtok(NULL, ",");
+    IntRDoors = ((String)token8).toInt();
+    char * token9 = strtok(NULL, ",");
+    IntLDoors = ((String)token9).toInt();
     //char * token10 = strtok(NULL, ",");
     //IntStation = ((String)token10).toInt();
   }
@@ -197,6 +197,9 @@ void loop()
    CDM();
    CAM();
    //if button was clicked
+   if(IntStation != 0){
+    announceStation();
+   }
    if(Engine_Fail_Flag == false){
       digitalWrite(Engine_Failure, LOW);
    }
@@ -221,7 +224,6 @@ void loop()
    if(AM != 1){
       //if Speed button is clicked
       if(SPDButton){
-          announceStation();
           SPDButton = false;
           delay(50);
       }
@@ -281,57 +283,55 @@ void loop()
    if(AM == 1){
    SPD = CMDSpd;
    if(CMDSpd == 0){
-      HBR = true;
-      Serial.print("sBrake:On");
+      if(!HBR) {
+        HBR = true;
+        Serial.print("sBrake:1;");
+      } 
+   } else if (HBR) {
+     HBR = false;
+     Serial.print("sBrake:0;");
    }
    if(Authority == 0){
-      EBR = true;
-      Serial.print("eBrake:On");
+      if(!EBR) {
+        EBR = true;
+        Serial.print("eBrake:1;");
+      }
+   } else if (EBR) {
+     EBR = false;
+     Serial.print("eBrake:0;");
    }
    if((int)TL != IntTunnelLights){
       if(IntTunnelLights == 1){
         TL = true;
-      }
-      else{
+        Serial.print("Lights:1;");
+      } else {
         TL = false;
-      }
-      Serial.print("Tunnel Lights:");
-      if(TL == true){
-        Serial.print("On");
-      }
-      else{
-        Serial.print("Off");
+        Serial.print("Lights:0;");
       }
    }
    if((int)LDR != IntLDoors){
-      if(IntLDoors == 1){
+      if(IntLDoors == 1 && ACTSpd == 0){
         LDR = true;
-      }
-      else{
+        Serial.print("lDoors:1;");
+      } else if (LDR) {
         LDR = false;
+        Serial.print("lDoors:0;");
       }
-      Serial.print("Left Door:");
-      if(LDR == true){
-        Serial.print("Open");
-      }
-      else{
-        Serial.print("Closed");
-      }
+   } else if (ACTSpd != 0 && LDR) {
+     LDR = false;
+     Serial.print("lDoors:0;");
    }
    if((int)RDR != IntRDoors){
-      if(IntRDoors == 1){
+      if(IntRDoors == 1 && ACTSpd == 0){
         RDR = true;
-      }
-      else{
+        Serial.print("rDoors:1;");
+      } else if (RDR) {
         RDR = false;
+        Serial.print("rDoors:0;");
       }
-      Serial.print("Right Door:");
-      if(RDR == true){
-        Serial.print("Open");
-      }
-      else{
-        Serial.print("Closed");
-      }
+   } else if (ACTSpd != 0 && RDR) {
+     RDR = false;
+     Serial.print("rDoors:0;");
    }
    }
    lcd.clear();
@@ -691,12 +691,97 @@ void CTL()
 }
 //announce station function
 void announceStation(){
-  if(SPD == 0){//and if At_station = true
-    if(EBR == false){
-    lcd.setCursor(0, 1);
-    lcd.print("Arrived At Station");
-    }
+  if(IntStation == 0){
   }
+  if(IntStation == 1){
+    lcd.setCursor(0, 1);
+    lcd.print("POPLAR");
+  }
+  if(IntStation == 2){
+    lcd.setCursor(0, 1);
+    lcd.print("CASTLE SHANNON");
+  }
+  if(IntStation == 3){
+    lcd.setCursor(0, 1);
+    lcd.print("DORMONT");
+  }
+  if(IntStation == 4){
+    lcd.setCursor(0, 1);
+    lcd.print("GLENBURY");
+  }
+  if(IntStation == 5){
+    lcd.setCursor(0, 1);
+    lcd.print("OVERBROOK");
+  }
+  if(IntStation == 6){
+    lcd.setCursor(0, 1);
+    lcd.print("INGLEWOOD");
+  }
+  if(IntStation == 7){
+    lcd.setCursor(0, 1);
+    lcd.print("CENTRAL");
+  }
+  if(IntStation == 8){
+    lcd.setCursor(0, 1);
+    lcd.print("SHADYSIDE");
+  }
+  if(IntStation == 9){
+    lcd.setCursor(0, 1);
+    lcd.print("HERRON AVE");
+  }
+  if(IntStation == 10){
+    lcd.setCursor(0, 1);
+    lcd.print("SWISSVALE");
+  }
+  if(IntStation == 11){
+    lcd.setCursor(0, 1);
+    lcd.print("PENN STATION");
+  }
+  if(IntStation == 12){
+    lcd.setCursor(0, 1);
+    lcd.print("STELL PLAZA");
+  }
+  if(IntStation == 13){
+    lcd.setCursor(0, 1);
+    lcd.print("FIRST AVE");
+  }
+  if(IntStation == 14){
+    lcd.setCursor(0, 1);
+    lcd.print("STATION SQUARE");
+  }
+  if(IntStation == 15){
+    lcd.setCursor(0, 1);
+    lcd.print("SOUTH HILLS JUNTION");
+  }
+  if(IntStation == 16){
+    lcd.setCursor(0, 1);
+    lcd.print("PIONEER");
+  }
+  if(IntStation == 17){
+    lcd.setCursor(0, 1);
+    lcd.print("EDGEBROOK");
+  }
+  if(IntStation == 18){
+    lcd.setCursor(0, 1);
+    lcd.print("MT LEBANON");
+  }
+  if(IntStation == 19){
+    lcd.setCursor(0, 1);
+    lcd.print("WHITED");
+  }
+  if(IntStation == 20){
+    lcd.setCursor(0, 1);
+    lcd.print("SOUTH BANK");
+  }
+  if(IntStation == 21){
+    lcd.setCursor(0, 1);
+    lcd.print("STATION");
+  }
+  //if(SPD == 0){//and if At_station = true
+  //  if(EBR == false){
+  //  lcd.setCursor(0, 1);
+  //  lcd.print("Arrived At Station");
+  //  }
 }
 //User Mode Command
 void CDM()
