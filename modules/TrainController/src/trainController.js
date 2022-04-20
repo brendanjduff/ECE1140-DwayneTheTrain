@@ -3,12 +3,15 @@ export default class TrainController {
     // Input Variables
     this.id = id
     this.cmdSpeed = 0
+    this.mphCmd = 0
     this.actSpeed = 0
+    this.mphAct = 0
     this.authority = 0
     this.kP = 10000
     this.kI = 0
     this.temp = 70
     this.speed = 0
+    this.mphSpeed = 0
     this.engine = false
     this.brakes = false
     this.signal = false
@@ -44,25 +47,27 @@ export default class TrainController {
   // UI Functions
   // Increase speed
   spdUp () {
-    this.speed = this.speed + 1
-    if (this.speed > 43) {
-      this.speed = 43
+    this.mphSpeed = Math.floor(this.mphSpeed + 1)
+    if (this.mphSpeed > 43) {
+      this.mphSpeed = 43
     }
-    else if (this.speed > this.cmdSpeed) {
-      this.speed = this.cmdSpeed
+    else if (this.mphSpeed > this.msToMph(this.cmdSpeed)) {
+      this.mphSpeed = this.msToMph(this.cmdSpeed)
     }
+    this.speed = this.mphToMs(this.mphSpeed)
     // console.log(this.speed)
-    return this.speed
+    return this.mphSpeed
   }
 
   // Decrease speed
   spdDown () {
-    this.speed = this.speed - 1
-    if (this.speed < 0) {
-      this.speed = 0
+    this.mphSpeed = Math.ceil(this.mphSpeed - 1)
+    if (this.mphSpeed < 0) {
+      this.mphSpeed = 0
     }
+    this.speed = this.mphToMs(this.mphSpeed)
     // console.log(this.speed)
-    return this.speed
+    return this.mphSpeed
   }
 
   // Emergency Brake
@@ -178,32 +183,36 @@ export default class TrainController {
 
   // Increase actual speed
   actSpeedUp () {
-    this.actSpeed = this.actSpeed + 1
-    return this.actSpeed
+    this.mphAct = Math.floor(this.mphAct + 1)
+    this.actSpeed = this.mphToMs(this.mphAct)
+    return this.mphAct
   }
 
   // Decrease actual speed
   actSpeedDown () {
-    this.actSpeed = this.actSpeed - 1
-    if (this.actSpeed < 0) {
-      this.actSpeed = 0
+    this.mphAct = Math.ceil(this.mphAct - 1)
+    if (this.mphAct < 0) {
+      this.mphAct = 0
     }
-    return this.actSpeed
+    this.actSpeed = this.mphToMs(this.mphAct)
+    return this.mphAct
   }
 
   // Increase commanded speed
   cmdSpeedUp () {
-    this.cmdSpeed = this.cmdSpeed + 1
-    return this.cmdSpeed
+    this.mphCmd = Math.floor(this.mphCmd + 1)
+    this.cmdSpeed = this.mphToMs(this.mphCmd)
+    return this.mphCmd
   }
 
   // Decrease commanded speed
   cmdSpeedDown () {
-    this.cmdSpeed = this.cmdSpeed - 1
-    if (this.cmdSpeed < 0) {
-      this.cmdSpeed = 0
+    this.mphCmd = Math.ceil(this.mphCmd - 1)
+    if (this.mphCmd < 0) {
+      this.mphCmd = 0
     }
-    return this.cmdSpeed
+    this.cmdSpeed = this.mphToMs(this.mphCmd)
+    return this.mphCmd
   }
 
   // Choose automatic
@@ -224,17 +233,26 @@ export default class TrainController {
     if(this.automatic == true && this.rightP == true && this.actSpeed == 0) {
       this.rightD = true
     }
+    else {
+      this.rightD = false
+    }
   }
   //Left platform
   leftPlat () {
     if(this.automatic == true && this.leftP == true && this.actSpeed == 0) {
       this.leftD = true
     }
+    else {
+      this.leftD = false
+    }
   }
   //Underground
   underGround () {
     if(this.automatic == true && this.underG == true) {
       this.lights = true
+    }
+    else {
+      this.lights = false
     }
   }
   //Stop when authoriy is 0
@@ -244,16 +262,24 @@ export default class TrainController {
       this.speed = 0
     }
   }
+  //Convert
+  msToMph (val) {
+    return val * 2.2369
+  }
+  //Convert back
+  mphToMs (val) {
+    return val / 2.2369
+  }
   // Power Calculation
   powerCalc (err, cumErr, cmdSpeed) {
-    this.err = this.cmdSpeed - this.actSpeed
+    this.err = this.speed - this.actSpeed
     this.cumErr = this.cumErr + this.err
     // this.power = this.err * this.kP + this.cumErr * this.kI
     const trainMass = 40000
     const humanMass = 20000
     const massRange = trainMass - humanMass
-    const powLOW = 0.5 * cmdSpeed * (trainMass - massRange)
-    const powHIGH = 0.5 * cmdSpeed * (trainMass + massRange)
+    const powLOW = 0.5 * speed * (trainMass - massRange)
+    const powHIGH = 0.5 * speed * (trainMass + massRange)
     if (this.err * this.kP + this.cumErr * this.kI < 480000) {
       this.power = this.err * this.kP + this.cumErr * this.kI
       if (powHIGH > this.power && powLOW < this.power) {
