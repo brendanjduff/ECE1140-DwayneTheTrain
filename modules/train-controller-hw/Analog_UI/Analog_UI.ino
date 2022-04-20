@@ -177,8 +177,8 @@ void loop()
     IntRDoors = ((String)token8).toInt();
     char * token9 = strtok(NULL, ",");
     IntLDoors = ((String)token9).toInt();
-    //char * token10 = strtok(NULL, ",");
-    //IntStation = ((String)token10).toInt();
+    char * token10 = strtok(NULL, ",");
+    IntStation = ((String)token10).toInt();
   }
    calcPower(CMDSpd, ACTSpd);
    CSPDUp(); 
