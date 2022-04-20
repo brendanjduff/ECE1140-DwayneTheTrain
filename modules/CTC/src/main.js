@@ -1,6 +1,7 @@
 const { app, BrowserWindow, ipcMain } = require('electron')
 const path = require('path')
 const isDev = require('electron-is-dev')
+import { createECDH } from 'crypto'
 import Train from './Train'
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
@@ -62,7 +63,7 @@ app.on('activate', () => {
 
 
 //Create Train
-const t = new Train(1)
+let trainList = []
 let createTrainID = 1
 
 
@@ -79,11 +80,14 @@ ipcMain.on('requestData', (event, arg) => { event.reply('fetchData', { // send p
 }) })
 
 function updateBlockOccupancy(data) {
-  data.forEach((b) => {
-    if(b.isOccupied) {
-      t.blockNum = b.num
+  let occupied = 0
+  for (let i = 0; i < data.length; i++) {
+    if(data[i]) {
+      occupied = i+1
+      break
     }
-  })
+  }
+  t.blockNum = occupied
 }
 
 const messenger = require('messenger')
@@ -98,15 +102,17 @@ const controllerSW = messenger.createSpeaker(8006)
 setInterval(() => { watchdog.shout('ctc', true) }, 100)
 
 ipcMain.on('createTrain', (event, arg) => {
+  const t = new Train(createTrainID)
   t.isDispatched = true
-  t.blockNum = 63
-  t.destination = 'Dormont'
+  t.blockNum = 62
+  t.destination = 'Dormont' // need to get destination from dropdown
   t.calculateSpeedAuth()
   trackModel.shout('createTrain', createTrainID) //create train is the data that i send, put suggested speed and auth in place of that
-  waysideHW.shout('createTrain', t)//???
-  waysideSW.shout('createTrain', t)//???
+  waysideHW.shout('createTrain', t)
+  waysideSW.shout('createTrain', t)
   trainModel.shout('createTrain', { id: createTrainID, hw: false })
   controllerSW.shout('createTrain', createTrainID)
+  trainList.push(t)
   createTrainID += 1
 })
 
@@ -123,10 +129,6 @@ ipcMain.on('departTimeMin', (event, arg) => {
   t.departureTimeMinutes = arg
 })
 
-input.on('wayside', (m, data) => {
+input.on('changedBlock', (m, data) => { // change input message when integrated
   updateBlockOccupancy(data)
-})
-
-input.on('clock1', (m, data) => {
-  waysideSW.shout('ctc')
 })
