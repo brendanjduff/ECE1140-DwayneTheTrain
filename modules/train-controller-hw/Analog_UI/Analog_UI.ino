@@ -123,7 +123,7 @@ bool Beacon_Lights, Beacon_LDoor, Beacon_RDoor;
 
 //LED vars
 bool Engine_Fail_Flag, Brake_Fail_Flag, Third_Fail_Flag;
-int IntTunnelLights, IntRDoors, IntLDoors;
+int IntTunnelLights, IntRDoors, IntLDoors, IntStation;
 
 
 void setup()
@@ -689,12 +689,97 @@ void CTL()
 }
 //announce station function
 void announceStation(){
-  if(SPD == 0){//and if At_station = true
-    if(EBR == false){
-    lcd.setCursor(0, 1);
-    lcd.print("Arrived At Station");
-    }
+  if(IntStation == 0){
   }
+  if(IntStation == 1){
+    lcd.setCursor(0, 1);
+    lcd.print("SHADYSIDE");
+  }
+  if(IntStation == 2){
+    lcd.setCursor(0, 1);
+    lcd.print("HERRON AVE");
+  }
+  if(IntStation == 3){
+    lcd.setCursor(0, 1);
+    lcd.print("SWISSVALE");
+  }
+  if(IntStation == 4){
+    lcd.setCursor(0, 1);
+    lcd.print("PENN AVE");
+  }
+  if(IntStation == 5){
+    lcd.setCursor(0, 1);
+    lcd.print("STEEL PLAZA");
+  }
+  if(IntStation == 6){
+    lcd.setCursor(0, 1);
+    lcd.print("FIRST AVE");
+  }
+  if(IntStation == 7){
+    lcd.setCursor(0, 1);
+    lcd.print("STATION SQUARE");
+  }
+  if(IntStation == 8){
+    lcd.setCursor(0, 1);
+    lcd.print("SOUTH HILLS JUNCTIONS");
+  }
+  if(IntStation == 9){
+    lcd.setCursor(0, 1);
+    lcd.print("PIONEER");
+  }
+  if(IntStation == 10){
+    lcd.setCursor(0, 1);
+    lcd.print("EDGEBROOK");
+  }
+  if(IntStation == 11){
+    lcd.setCursor(0, 1);
+    lcd.print("STATION");
+  }
+  if(IntStation == 12){
+    lcd.setCursor(0, 1);
+    lcd.print("WHITED");
+  }
+  if(IntStation == 13){
+    lcd.setCursor(0, 1);
+    lcd.print("SOUTH BANK");
+  }
+  if(IntStation == 14){
+    lcd.setCursor(0, 1);
+    lcd.print("CENTRAL");
+  }
+  if(IntStation == 15){
+    lcd.setCursor(0, 1);
+    lcd.print("INGLEWOOD");
+  }
+  if(IntStation == 16){
+    lcd.setCursor(0, 1);
+    lcd.print("OVERBROOK");
+  }
+  if(IntStation == 17){
+    lcd.setCursor(0, 1);
+    lcd.print("GLENBURY");
+  }
+  if(IntStation == 18){
+    lcd.setCursor(0, 1);
+    lcd.print("DORMONT");
+  }
+  if(IntStation == 19){
+    lcd.setCursor(0, 1);
+    lcd.print("MT LEBANON");
+  }
+  if(IntStation == 20){
+    lcd.setCursor(0, 1);
+    lcd.print("POPLAR");
+  }
+  if(IntStation == 21){
+    lcd.setCursor(0, 1);
+    lcd.print("CASTLE SHANNON");
+  }
+  //if(SPD == 0){//and if At_station = true
+  //  if(EBR == false){
+  //  lcd.setCursor(0, 1);
+  //  lcd.print("Arrived At Station");
+  //  }
 }
 //User Mode Command
 void CDM()
