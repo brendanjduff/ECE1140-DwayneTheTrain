@@ -20,7 +20,7 @@ class App extends React.Component {
         this.setState({
           exists: arg.exists,
           id: arg.train.id,
-          speed: arg.train.speed,
+          speed: this.msToMph(arg.train.speed),
           temp: arg.train.temp,
           sBrake: arg.train.sBrake,
           eBrake: arg.train.eBrake,
