@@ -197,6 +197,9 @@ void loop()
    CDM();
    CAM();
    //if button was clicked
+   if(IntStation != 0){
+    announceStation();
+   }
    if(Engine_Fail_Flag == false){
       digitalWrite(Engine_Failure, LOW);
    }
@@ -221,7 +224,6 @@ void loop()
    if(AM != 1){
       //if Speed button is clicked
       if(SPDButton){
-          announceStation();
           SPDButton = false;
           delay(50);
       }
@@ -693,87 +695,87 @@ void announceStation(){
   }
   if(IntStation == 1){
     lcd.setCursor(0, 1);
-    lcd.print("SHADYSIDE");
+    lcd.print("POPLAR");
   }
   if(IntStation == 2){
     lcd.setCursor(0, 1);
-    lcd.print("HERRON AVE");
+    lcd.print("CASTLE SHANNON");
   }
   if(IntStation == 3){
     lcd.setCursor(0, 1);
-    lcd.print("SWISSVALE");
+    lcd.print("DORMONT");
   }
   if(IntStation == 4){
     lcd.setCursor(0, 1);
-    lcd.print("PENN AVE");
+    lcd.print("GLENBURY");
   }
   if(IntStation == 5){
     lcd.setCursor(0, 1);
-    lcd.print("STEEL PLAZA");
+    lcd.print("OVERBROOK");
   }
   if(IntStation == 6){
     lcd.setCursor(0, 1);
-    lcd.print("FIRST AVE");
+    lcd.print("INGLEWOOD");
   }
   if(IntStation == 7){
     lcd.setCursor(0, 1);
-    lcd.print("STATION SQUARE");
+    lcd.print("CENTRAL");
   }
   if(IntStation == 8){
     lcd.setCursor(0, 1);
-    lcd.print("SOUTH HILLS JUNCTIONS");
+    lcd.print("SHADYSIDE");
   }
   if(IntStation == 9){
     lcd.setCursor(0, 1);
-    lcd.print("PIONEER");
+    lcd.print("HERRON AVE");
   }
   if(IntStation == 10){
     lcd.setCursor(0, 1);
-    lcd.print("EDGEBROOK");
+    lcd.print("SWISSVALE");
   }
   if(IntStation == 11){
     lcd.setCursor(0, 1);
-    lcd.print("STATION");
+    lcd.print("PENN STATION");
   }
   if(IntStation == 12){
     lcd.setCursor(0, 1);
-    lcd.print("WHITED");
+    lcd.print("STELL PLAZA");
   }
   if(IntStation == 13){
     lcd.setCursor(0, 1);
-    lcd.print("SOUTH BANK");
+    lcd.print("FIRST AVE");
   }
   if(IntStation == 14){
     lcd.setCursor(0, 1);
-    lcd.print("CENTRAL");
+    lcd.print("STATION SQUARE");
   }
   if(IntStation == 15){
     lcd.setCursor(0, 1);
-    lcd.print("INGLEWOOD");
+    lcd.print("SOUTH HILLS JUNTION");
   }
   if(IntStation == 16){
     lcd.setCursor(0, 1);
-    lcd.print("OVERBROOK");
+    lcd.print("PIONEER");
   }
   if(IntStation == 17){
     lcd.setCursor(0, 1);
-    lcd.print("GLENBURY");
+    lcd.print("EDGEBROOK");
   }
   if(IntStation == 18){
     lcd.setCursor(0, 1);
-    lcd.print("DORMONT");
+    lcd.print("MT LEBANON");
   }
   if(IntStation == 19){
     lcd.setCursor(0, 1);
-    lcd.print("MT LEBANON");
+    lcd.print("WHITED");
   }
   if(IntStation == 20){
     lcd.setCursor(0, 1);
-    lcd.print("POPLAR");
+    lcd.print("SOUTH BANK");
   }
   if(IntStation == 21){
     lcd.setCursor(0, 1);
-    lcd.print("CASTLE SHANNON");
+    lcd.print("STATION");
   }
   //if(SPD == 0){//and if At_station = true
   //  if(EBR == false){
