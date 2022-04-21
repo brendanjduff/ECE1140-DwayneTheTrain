@@ -68,7 +68,7 @@ class TrackLine {
     this.blocks = []
     this.switches = {}
     this.stations = {}
-    this.corssings = {}
+    this.crossings = {}
   }
 }
 
@@ -95,6 +95,7 @@ class Block{
     this.circuitBroken = false;
     this.hasPower = true;
     this.heaterStatus = false;
+    this.beacon = false;
 
     this.speedCmd = 0
     this.authCmd = 0
@@ -175,20 +176,17 @@ class Switch {
 }
 
 class Station {
-  constructor(blockNum,name,lDoor,rDoor,beaconM){
+  constructor(blockNum,name,lDoor,rDoor){
     this.blockNum = blockNum
     this.name = name
     this.lDoor = lDoor
     this.rDoor = rDoor
-    this.becaonM = becaonM
-
     this.boardingPax = 0
-
-    stationBeac = new Beacon(this.name,this.lDoor,this.rDoor,beaconM[3])
   }
 
   sellTix(){
     this.boardingPax = Math.floor(Math.random()*20)
+    return this.boardingPax
   }
 }
 
@@ -253,9 +251,9 @@ function readInTrack(){
   return testLine
 }
 
-var greenLine = readInTrack()
+//var greenLine = readInTrack()
 
-/*var greenLine = new TrackLine('Green Line');
+var greenLine = new TrackLine('Green Line');
 
   greenLine.blocks[0] = new Block(0,10000000,0,true,0,true,0,true,20)
   greenLine.blocks[1] = new Block(1,100,0.5,false,13,false,13,false,45)
@@ -328,7 +326,9 @@ var greenLine = readInTrack()
   greenLine.blocks[62] = new Block(62,50,0,false,63,true,63,true,30)
   greenLine.blocks[63] = new Block(63,100,0,false,64,true,64,true,70)
   greenLine.blocks[64] = new Block(64,100,0,true,65,true,65,true,70)
-  greenLine.blocks[65] = new Block(65,200,0,false,66,true,66,true,70)
+  greenLine.blocks[65] = new Block(65,200,0,false,66,true,66,true,70, true)
+  greenLine.blocks[65].setBeacon(new Beacon("GLENBURY", false, true, false));
+  greenLine.stations[65] = new Station(65, "GLENBURY", false, true)
   greenLine.blocks[66] = new Block(66,200,0,false,67,true,67,true,70)
   greenLine.blocks[67] = new Block(67,100,0,false,68,true,68,true,40)
   greenLine.blocks[68] = new Block(68,100,0,false,69,true,69,true,40)
@@ -337,11 +337,15 @@ var greenLine = readInTrack()
 
   greenLine.blocks[71] = new Block(71,100,0,false,72,true,72,true,40)
   greenLine.blocks[72] = new Block(72,100,0,false,73,true,73,true,40)
-  greenLine.blocks[73] = new Block(73,100,0,false,74,true,74,true,40)
+  greenLine.blocks[73] = new Block(73,100,0,false,74,true,74,true,40, true)
+  greenLine.blocks[73].setBeacon(new Beacon("DORMONT", true, false, false))
+  greenLine.stations[73] = new Station(73, "DORMONT", true, false)
   greenLine.blocks[74] = new Block(74,100,0,false,75,true,75,true,40)
   greenLine.blocks[75] = new Block(75,100,0,false,76,true,76,true,40)
   greenLine.blocks[76] = new Block(76,100,0,false,77,true,77,true,40)
-  greenLine.blocks[77] = new Block(77,300,0,true,78,true,101,false,70)//
+  greenLine.blocks[77] = new Block(77,300,0,true,78,true,101,false,70, true)//
+  greenLine.blocks[77].setBeacon(new Beacon("MT LEBANON", true, true, true))
+  greenLine.stations[77] = new Station(77, "MT LEBANON", true, true)
   greenLine.blocks[78] = new Block(78,300,0,true,79,true,77,false,70)//
   greenLine.blocks[79] = new Block(79,300,0,true,80,true,78,false,70)//
   greenLine.blocks[80] = new Block(80,300,0,true,81,true,79,false,70)//
@@ -456,7 +460,7 @@ var greenLine = readInTrack()
   greenLine.blocks[141].hasStation = true
 
   greenLine.blocks[19].hasCrossing = true
-  */
+  
   
 //=====================================================================================================
 
@@ -479,6 +483,7 @@ class Train {
     this.underground = false
     this.leftPlatform = false
     this.rightPlatform = false
+    this.boardingPax = 0
   }
 
   updatePosition(dx) {
@@ -508,26 +513,31 @@ class Train {
         this.direction = greenLine.blocks[this.block].nextDirR
         this.block = greenLine.blocks[this.block].nextBlockR
       }
-
-      if (greenLine.blocks[this.block].hasBeacon) {
-        this.station = greenLine.block[this.block].beacon.station
-        this.underground = greenLine.block[this.block].beacon.underground
-        this.leftPlatform = greenLine.block[this.block].beacon.leftPlatform
-        this.rightPlatform = greenLine.block[this.block].beacon.rightPlatform
-      }
     }
-    else {
+    if (greenLine.blocks[this.block].hasBeacon) {
+      this.station = greenLine.blocks[this.block].beacon.station
+      this.underground = greenLine.blocks[this.block].beacon.underground
+      this.leftPlatform = greenLine.blocks[this.block].beacon.leftPlatform
+      this.rightPlatform = greenLine.blocks[this.block].beacon.rightPlatform
+    } else {
       this.station = ''
       this.leftPlatform = false
       this.rightPlatform = false
       this.underground = false
     }
   }
+  updatePassengers(pax, max, deboard) {
+    if(max > 0) {
+      this.boardingPax = Math.min(greenLine.stations[this.block].sellTix(), max);
+    } else {
+      this.boardingPax = 0;
+    }
+  }
 
   getMessage() {
     return {
       id: this.trainId,
-      boardingPax: 0,
+      boardingPax: this.boardingPax,
       speedCmd: greenLine.blocks[this.block].speedCmd,
       authorityCmd: greenLine.blocks[this.block].authCmd,
       station: this.station, 
@@ -561,6 +571,7 @@ input.on('trainModel', (m, data) => {
   data.forEach((t) => {
     const id = t.id
     trainsDict[id].updatePosition(t['distance'])
+    trainsDict[id].updatePassengers(t['passengers'], t['maxBoardingPax'], t['deboardingPax'])
   })
   trainsList.forEach((t) => {
     greenLine.blocks[t.block].isOccupied = true
