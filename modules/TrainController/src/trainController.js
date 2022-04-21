@@ -228,38 +228,54 @@ export default class TrainController {
   }
 
   // Backend Functions
+  // Desired speed
+  autoSpeed() {
+    if(this.automatic) {
+      this.speed = this.cmdSpeed
+    }
+  }
   //Right platform
   rightPlat () {
-    if(this.automatic == true && this.rightP == true && this.actSpeed == 0) {
-      this.rightD = true
-    }
-    else {
-      this.rightD = false
+    if(this.automatic) {
+      if(this.rightP == true && this.actSpeed == 0) {
+        this.rightD = true
+      }
+      else {
+        this.rightD = false
+      }
     }
   }
   //Left platform
   leftPlat () {
-    if(this.automatic == true && this.leftP == true && this.actSpeed == 0) {
-      this.leftD = true
-    }
-    else {
-      this.leftD = false
+      if(this.automatic) {
+      if(this.leftP == true && this.actSpeed == 0) {
+        this.leftD = true
+      }
+      else {
+        this.leftD = false
+      }
     }
   }
   //Underground
   underGround () {
-    if(this.automatic == true && this.underG == true) {
-      this.lights = true
-    }
-    else {
-      this.lights = false
+    if(this.automatic) {
+      if(this.underG == true) {
+        this.lights = true
+      }
+      else {
+        this.lights = false
+      }
     }
   }
   //Stop when authoriy is 0
   stop () {
-    if (this.automatic && (this.authority === 0 || this.cmdSpeed === 0)) {
-      this.sBrake = true
-      this.speed = 0
+    if(this.automatic) {
+      if(this.authority === 0 || this.cmdSpeed === 0) {
+        this.sBrake = true
+        this.speed = 0
+      } else {
+        this.sBrake = false;
+      }
     }
   }
   //Convert
@@ -278,8 +294,8 @@ export default class TrainController {
     const trainMass = 40000
     const humanMass = 20000
     const massRange = trainMass - humanMass
-    const powLOW = 0.5 * speed * (trainMass - massRange)
-    const powHIGH = 0.5 * speed * (trainMass + massRange)
+    const powLOW = 0.5 * this.speed * (trainMass - massRange)
+    const powHIGH = 0.5 * this.speed * (trainMass + massRange)
     if (this.err * this.kP + this.cumErr * this.kI < 480000) {
       this.power = this.err * this.kP + this.cumErr * this.kI
       if (powHIGH > this.power && powLOW < this.power) {
