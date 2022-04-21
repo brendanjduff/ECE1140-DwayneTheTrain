@@ -128,5 +128,6 @@ input.on('trainModel', (m, data) => {
   trainsList.forEach(t => { t.leftPlat() })
   trainsList.forEach(t => { t.rightPlat() })
   trainsList.forEach(t => { t.underGround() })
+  trainsList.forEach(t => { t.autoSpeed() })
   trainModel.shout('controllerSW', trainsList.map((t) => t.getMessage()))
 })
