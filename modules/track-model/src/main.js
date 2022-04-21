@@ -219,7 +219,7 @@ function readInTrack(){
     .pipe(parse({ headers: true }))
     .on('error', error => console.error(error))
     .on('data', row => {
-        console.log(row);
+        //console.log(row);
         //each row can be written to db
         rows.push(row);
     })
@@ -250,11 +250,12 @@ function readInTrack(){
       testLine.blocks[i-1].hasCrossing = true
     }
   }
+  return testLine
 }
 
-readInTrack()
+var greenLine = readInTrack()
 
-var greenLine = new TrackLine('Green Line');
+/*var greenLine = new TrackLine('Green Line');
 
   greenLine.blocks[0] = new Block(0,10000000,0,true,0,true,0,true,20)
   greenLine.blocks[1] = new Block(1,100,0.5,false,13,false,13,false,45)
@@ -455,7 +456,7 @@ var greenLine = new TrackLine('Green Line');
   greenLine.blocks[141].hasStation = true
 
   greenLine.blocks[19].hasCrossing = true
-  
+  */
   
 //=====================================================================================================
 
