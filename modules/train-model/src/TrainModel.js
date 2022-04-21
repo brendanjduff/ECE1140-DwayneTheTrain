@@ -80,7 +80,8 @@ export default class TrainModel {
     }
     this.stopping = {
       time: 0,
-      duration: 10
+      duration: 15,
+      boarded: false
     }
   }
 
@@ -213,8 +214,16 @@ export default class TrainModel {
     }
     console.log("t: " + this.stopping.time + ", station: " + this.thru.station + ", velocity: " + this.state.velocity);
 
+    // manage stopping
+    if((this.thru.station && this.state.velocity > 0 && this.stopping.time < this.stopping.duration ) || !this.thru.station) {
+      this.stopping.time = 0
+      this.stopping.boarded = false
+    } else if (this.state.velocity < 1e-5) {
+      this.stopping.time += dt;
+    }
+
     // if stopped and doors and platforms match, then passengers can board and send max to track model
-    if (((this.thru.leftPlatform && this.state.leftDoors) || (this.thru.rightPlatform && this.state.rightDoors)) && this.state.velocity === 0) {
+    if (((this.thru.leftPlatform && this.state.leftDoors) || (this.thru.rightPlatform && this.state.rightDoors)) && this.state.velocity === 0 && !this.stopping.boarded) {
       this.trackIntf.outputs.maxBoardingPax = this.vehicle.paxCap - this.state.passengers + this.trackIntf.outputs.deboardingPax
     } else {
       this.trackIntf.outputs.maxBoardingPax = 0
@@ -225,6 +234,7 @@ export default class TrainModel {
       this.state.passengers = Math.min(this.state.passengers - this.trackIntf.outputs.deboardingPax + this.trackIntf.inputs.boardingPax, this.vehicle.paxCap)
       this.trackIntf.outputs.deboardingPax = 0
       this.trackIntf.outputs.maxBoardingPax = 0
+      this.stopping.boarded = true
     }
   }
 
