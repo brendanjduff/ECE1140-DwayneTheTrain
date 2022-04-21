@@ -1,5 +1,7 @@
 const { app, BrowserWindow, ipcMain } = require('electron')
 const path = require('path')
+const fs = require('fs');
+const { parse } = require('fast-csv');
 
 const isDev = require('electron-is-dev')
 
@@ -65,11 +67,13 @@ class TrackLine {
     this.name = name
     this.blocks = []
     this.switches = {}
+    this.stations = {}
+    this.corssings = {}
   }
 }
 
 class Block{
-  constructor(blockNum,length,grade,isBidirectional,nextBlockF,nextDirF,nextBlockR,nextDirR,speedLimit){
+  constructor(blockNum,length,grade,isBidirectional,nextBlockF,nextDirF,nextBlockR,nextDirR,speedLimit,hasBeacon){
     this.blockNum = blockNum;
     this.length = length;
     this.grade = grade;
@@ -79,6 +83,7 @@ class Block{
     this.nextBlockR = nextBlockR
     this.nextDirR = nextDirR
     this.speedLimit = speedLimit
+    this.hasBeacon = hasBeacon
 
     this.isOpen = true;
     this.isOccupied = false;
@@ -93,6 +98,10 @@ class Block{
 
     this.speedCmd = 0
     this.authCmd = 0
+    
+  }
+  setBeacon(beacon){
+    this.beacon = beacon
   }
   toggleStatus(){
     this.isOpen = !this.isOpen;
@@ -165,26 +174,86 @@ class Switch {
   }
 }
 
-function sendBeacon(blockI){
-  return blockI.beaconM
-}
-/*
-function resetBlocks(){
-  for(let i = 0; i < greenBlocks.size(); i++){
-    greenBlocks[i].resetOccupation();
-  }
-}*/
+class Station {
+  constructor(blockNum,name,lDoor,rDoor,beaconM){
+    this.blockNum = blockNum
+    this.name = name
+    this.lDoor = lDoor
+    this.rDoor = rDoor
+    this.becaonM = becaonM
 
-function parseCSV(input) {
-  var rows = input.split(/\r?\n/);
-  var keys = rows.shift().split(",");
-  return rows.map(function(row) {
-      return row.split(",").reduce(function(map, val, i) {
-          map[keys[i]] = val;
-          return map;
-      }, {});
-  });
+    this.boardingPax = 0
+
+    stationBeac = new Beacon(this.name,this.lDoor,this.rDoor,beaconM[3])
+  }
+
+  sellTix(){
+    this.boardingPax = Math.floor(Math.random()*20)
+  }
 }
+
+class Crossing {
+  constructor(blockNum,pos){
+    this.blockNum = blockNum
+    this.pos = pos
+  }
+
+  changePos(){
+    this.pos = !this.pos
+  }
+}
+
+class Beacon {
+  constructor(station,leftPlatform,rightPlatform,underground){
+    this.station = station
+    this.leftPlatform = leftPlatform
+    this.rightPlatform = rightPlatform
+    this.underground = underground
+  }
+}
+
+function readInTrack(){
+  let rows = [];
+
+  fs.createReadStream(path.resolve(__dirname, 'GreenLine.csv'))
+    .pipe(parse({ headers: true }))
+    .on('error', error => console.error(error))
+    .on('data', row => {
+        console.log(row);
+        //each row can be written to db
+        rows.push(row);
+    })
+    .on('end', rowCount => {
+        console.log(`Parsed ${rowCount} rows`);
+    });
+  let testLine = new TrackLine("Green Line")
+  for(let i = 1; i<rows.length;i++){
+    testLine.blocks[i-1] = new Block(rows[i].BlockNumber,
+                                    rows[i].blockLength,
+                                    rows[i].BlockGrade,
+                                    rows[i].isBidirecitonal,
+                                    rows[i].NextBlock,
+                                    true,
+                                    rows[i].NextBlock,
+                                    true,
+                                    rows[i].SpeedLimit,
+                                    false)
+    if(rows[i].switch === 'TRUE'){
+      testLine.blocks[i-1].hasSwitch = true
+      testLine.switches[i-1] = new Switch(false,false,i,false,i+1,false,i+1,false,'')
+    }
+    if(rows[i].station !== ''){
+      testLine.blocks[i-1].hasStation = true
+      testline.stations[i-1] = new Station(i-1,rows[i].station,rows[i].lDoor,rows[i].rDoor,)
+    }
+    if(rows[i].crossing === 'TRUE'){
+      testLine.blocks[i-1].hasCrossing = true
+    }
+  }
+}
+
+readInTrack()
+
 var greenLine = new TrackLine('Green Line');
 
   greenLine.blocks[0] = new Block(0,10000000,0,true,0,true,0,true,20)
@@ -387,20 +456,8 @@ var greenLine = new TrackLine('Green Line');
 
   greenLine.blocks[19].hasCrossing = true
   
-
+  
 //=====================================================================================================
-//console.log(parseCSV('D:/Documents/CodingPortfolio/electron-project-setup/my-app/csvtester.csv'))
-
-
-// for(let i = 0; i<16; i++){
-//   greenLine.blocks[i] = new Block(i,50,0,0,true,50);
-//   if(i === 5){
-//     greenLine.blocks[i].hasSwitch = true;
-//   }
-//   if(i === 10 || i === 15){
-//     greenLine.blocks[i].hasStation = true;
-//   }
-// }
 
 const messenger = require('messenger')
 const input = messenger.createListener(8004)
@@ -417,6 +474,10 @@ class Train {
     this.position = 0
     this.block = 63
     this.direction = true
+    this.station = ''
+    this.underground = false
+    this.leftPlatform = false
+    this.rightPlatform = false
   }
 
   updatePosition(dx) {
@@ -446,6 +507,19 @@ class Train {
         this.direction = greenLine.blocks[this.block].nextDirR
         this.block = greenLine.blocks[this.block].nextBlockR
       }
+
+      if (greenLine.blocks[this.block].hasBeacon) {
+        this.station = greenLine.block[this.block].beacon.station
+        this.underground = greenLine.block[this.block].beacon.underground
+        this.leftPlatform = greenLine.block[this.block].beacon.leftPlatform
+        this.rightPlatform = greenLine.block[this.block].beacon.rightPlatform
+      }
+    }
+    else {
+      this.station = ''
+      this.leftPlatform = false
+      this.rightPlatform = false
+      this.underground = false
     }
   }
 
@@ -455,11 +529,11 @@ class Train {
       boardingPax: 0,
       speedCmd: greenLine.blocks[this.block].speedCmd,
       authorityCmd: greenLine.blocks[this.block].authCmd,
-      station: '', 
-      rightPlatform: false,
-      leftPlatform: false,
-      underground: false,
-      grade: 0
+      station: this.station, 
+      rightPlatform: this.rightPlatform,
+      leftPlatform: this.leftPlatform,
+      underground: this.underground,
+      grade: greenLine.blocks[this.block].grade
     }
   }
 }
