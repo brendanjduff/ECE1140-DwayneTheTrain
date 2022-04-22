@@ -49,6 +49,7 @@ int LastSPDButtonState_Up = 0;
 int SPDButtonState_Down = 0; 
 int LastSPDButtonState_Down = 0;
 bool SPDButton = false;
+int mphSPD = 0;
 
 //Temperature Variables
 int TMP = 70; 
@@ -177,8 +178,8 @@ void loop()
     IntRDoors = ((String)token8).toInt();
     char * token9 = strtok(NULL, ",");
     IntLDoors = ((String)token9).toInt();
-    char * token10 = strtok(NULL, ",");
-    IntStation = ((String)token10).toInt();
+    //char * token10 = strtok(NULL, ",");
+    //IntStation = ((String)token10).toInt();
   }
    calcPower(CMDSpd, ACTSpd);
    CSPDUp(); 
@@ -335,10 +336,11 @@ void loop()
    }
    }
    lcd.clear();
+   lcd.autoscroll();
    lcd.print("CMD:");
-   lcd.print(CMDSpd);
+   lcd.print(CMDSpd * 2.25);
    lcd.print(" ACT:");
-   lcd.print(ACTSpd);
+   lcd.print(ACTSpd * 2.25);
    lcd.print(" A:");
    lcd.print(Authority);
    delay(50);
@@ -355,11 +357,12 @@ void CSPDUp()
       if(SPD < CMDSpd){
         SPD++;
       }
+      mphSPD = 2.25 * SPD;
       SPDButton = true;
       lcd.setCursor(0, 1);
       lcd.print("Speed: ");
-      lcd.print(SPD);
-      lcd.print("m/s");
+      lcd.print(mphSPD);
+      lcd.print("mph");
       delay(50);
     } 
     else {
@@ -380,11 +383,12 @@ void CSPDDown()
       if(SPD < 45){
         SPD--;
       }
+      mphSPD = 2.25 * SPD;
       SPDButton = true;
       lcd.setCursor(0, 1);
       lcd.print("Speed: ");
-      lcd.print(SPD);
-      lcd.print("m/s");
+      lcd.print(mphSPD);
+      lcd.print("mph");
       delay(50);
     } 
     else {
