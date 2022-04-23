@@ -111,7 +111,7 @@ export default class TrainModel {
 
   procControlOutputs () {
     this.controllerIntf.outputs.velocity = this.state.velocity
-    if(this.thru.station && this.stopping.time < this.stopping.duration) {
+    if (this.thru.station && this.stopping.time < this.stopping.duration) {
       this.controllerIntf.outputs.speedCmd = 0
     } else {
       this.controllerIntf.outputs.speedCmd = this.thru.speedCmd
@@ -201,25 +201,24 @@ export default class TrainModel {
     this.trackIntf.outputs.distance = this.state.velocity * dt
     this.trackIntf.outputs.passengers = this.state.passengers
 
-    // generate random deboardingPax if there are passengers on board and 
-    if(this.trackIntf.outputs.maxBoardingPax === 0 && this.trackIntf.outputs.deboardingPax === 0 && this.state.passengers > 0) {
+    // generate random deboardingPax if there are passengers on board and
+    if (this.trackIntf.outputs.maxBoardingPax === 0 && this.trackIntf.outputs.deboardingPax === 0 && this.state.passengers > 0) {
       this.trackIntf.outputs.deboardingPax = Math.floor(Math.random() * this.state.passengers)
     }
 
     // manage stopping
-    if((this.thru.station && this.state.velocity > 0 && this.stopping.time < this.stopping.duration ) || !this.thru.station) {
+    if ((this.thru.station && this.state.velocity > 0 && this.stopping.time < this.stopping.duration) || !this.thru.station) {
       this.stopping.time = 0
     } else if (this.state.velocity < 1e-5) {
-      this.stopping.time += dt;
+      this.stopping.time += dt
     }
-    console.log("t: " + this.stopping.time + ", station: " + this.thru.station + ", velocity: " + this.state.velocity);
 
     // manage stopping
-    if((this.thru.station && this.state.velocity > 0 && this.stopping.time < this.stopping.duration ) || !this.thru.station) {
+    if ((this.thru.station && this.state.velocity > 0 && this.stopping.time < this.stopping.duration) || !this.thru.station) {
       this.stopping.time = 0
       this.stopping.boarded = false
     } else if (this.state.velocity < 1e-5) {
-      this.stopping.time += dt;
+      this.stopping.time += dt
     }
 
     // if stopped and doors and platforms match, then passengers can board and send max to track model
@@ -229,7 +228,7 @@ export default class TrainModel {
       this.trackIntf.outputs.maxBoardingPax = 0
     }
 
-    // if passengers received, 
+    // if passengers received,
     if (this.trackIntf.inputs.boardingPax > 0) {
       this.state.passengers = Math.min(this.state.passengers - this.trackIntf.outputs.deboardingPax + this.trackIntf.inputs.boardingPax, this.vehicle.paxCap)
       this.trackIntf.outputs.deboardingPax = 0

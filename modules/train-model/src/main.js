@@ -11,8 +11,8 @@ if (require('electron-squirrel-startup')) {
 const createWindow = () => {
   // Create the browser window.
   const mainWindow = new BrowserWindow({
-    width: 600,
-    height: 720,
+    width: 750,
+    height: 800,
     minWidth: 300,
     minHeight: 500,
     show: false,
@@ -61,8 +61,8 @@ app.on('activate', () => {
 })
 
 // Main Process
-let trainsList = []
-let trainsDict = []
+const trainsList = []
+const trainsDict = []
 let selTrainId = 1
 let hwTrain = null
 let hwTrainId = 0
@@ -78,9 +78,7 @@ ipcMain.on('setEmergencyBrakePax', (event, arg) => { trainsDict[selTrainId].user
 
 function createTrain (id, hw) {
   const newTrain = new TrainModel(id, hw)
-  if(trainsList.length === 0) {
-    selTrainId = id
-  }
+  if (trainsList.length === 0) { selTrainId = id }
   trainsList.push(newTrain)
   trainsDict[newTrain.trainId] = newTrain
   if (hw) {
@@ -98,7 +96,6 @@ const hwtcOutput = messenger.createSpeaker(8007)
 
 input.on('trackModel', (m, data) => {
   const outputSW = []
-  let outputHW = {}
   data.forEach(t => {
     const id = t.id
     trainsDict[id].receiveTrackInput(t)
@@ -106,7 +103,7 @@ input.on('trackModel', (m, data) => {
     trainsDict[id].procControlOutputs()
     if (hwTrainId === id) { hwtcOutput.shout('trainModel', trainsDict[id].getControlOutputs()) } else { outputSW.push(trainsDict[id].getControlOutputs()) }
   })
-  swtcOutput.shout('trainModel', outputSW) 
+  swtcOutput.shout('trainModel', outputSW)
 })
 
 input.on('controllerSW', (m, data) => {
@@ -115,6 +112,7 @@ input.on('controllerSW', (m, data) => {
     trainsDict[id].receiveControlInput(t)
   })
 })
+
 input.on('controllerHW', (m, data) => {
   hwTrain.receiveControlInput(data)
 })
@@ -131,9 +129,8 @@ input.on('clock2', (m, data) => {
   trackOutput.shout('trainModel', outputTrack)
 })
 
-// Receiver for CTC (Train Creation / Destruction Only)
 input.on('createTrain', (m, data) => {
-  createTrain(data['id'], data['hw']) 
-}) // create or destroy train (occurs when leaving or entering the yard)
+  createTrain(data.id, data.hw)
+})
 
 setInterval(() => { watchdog.shout('trainModel', true) }, 100)
