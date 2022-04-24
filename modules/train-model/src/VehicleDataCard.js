@@ -7,8 +7,9 @@ export default class VehicleDataCard extends React.Component {
     return (
       <Card>
         <Card.Body>
-          <Card.Title>{this.props.vehicle.name}</Card.Title>
+          <Card.Title>Vehicle Specifications</Card.Title>
           <Card.Text>
+            <strong>Name:</strong> {this.props.vehicle.name}<br />
             <strong>Length:</strong> {mToFt(this.props.vehicle.length).toFixed(1)} ft<br />
             <strong>Height: </strong> {mToFt(this.props.vehicle.height).toFixed(1)} ft<br />
             <strong>Width: </strong> {mToFt(this.props.vehicle.width).toFixed(1)} ft<br />

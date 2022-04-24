@@ -23,9 +23,8 @@ export default class Overview extends React.Component {
                 <th>Doors</th>
                 <th>Lights</th>
                 <th>Temp<br />(°F)</th>
-                <th>Crew</th>
                 <th>Passengers</th>
-                {/* thru information */}
+                {/* information sent from track model to train controller */}
                 <th>SpeedCmd<br />(mph)</th>
                 <th>Authority<br />(blocks)</th>
                 <th>Station</th>

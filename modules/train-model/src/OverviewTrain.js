@@ -20,13 +20,12 @@ export default class OverviewTrain extends React.Component {
         <td>{(trainState.leftDoors && trainState.rightDoors) ? 'All Open' : (trainState.rightDoors ? 'Right Open' : (trainState.leftDoors ? 'Left Open' : 'Closed'))}</td>
         <td>{trainState.lights ? 'On' : 'Off'}</td>
         <td>{trainState.temperature}</td>
-        <td>{trainState.crew}</td>
         <td>{trainState.passengers} / {this.props.train.vehicle.paxCap}</td>
         {/* thru information */}
         <td>{msToMph(thruState.speedCmd).toFixed(1)}</td>
         <td>{thruState.authorityCmd}</td>
-        <td>{thruState.station}</td>
-        <td>{(thruState.leftPlatform ? 'Left' : '') + ((thruState.leftPlatform && thruState.rightPlatform) ? '/' : '') + (thruState.rightPlatform ? 'Right' : '')}</td>
+        <td>{thruState.station ? thruState.station : 'None'}</td>
+        <td>{(thruState.leftPlatform ? 'Left' : '') + ((thruState.leftPlatform && thruState.rightPlatform) ? '/' : '') + (thruState.rightPlatform ? 'Right' : '') + ((!thruState.leftPlatform && !thruState.rightPlatform) ? 'None' : '')}</td>
         <td>{thruState.underground ? 'Yes' : 'No'}</td>
       </tr>
     )

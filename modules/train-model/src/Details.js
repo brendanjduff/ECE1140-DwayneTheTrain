@@ -1,6 +1,7 @@
 import React from 'react'
 import { Container, Row, Col, DropdownButton, Dropdown, Stack } from 'react-bootstrap'
 import TrainStateCard from './TrainStateCard'
+import CommsCard from './CommsCard'
 import VehicleDataCard from './VehicleDataCard'
 import FailureControlCard from './FailureControlCard'
 import EmergencyBrakeCard from './EmergencyBrakeCard'
@@ -21,12 +22,13 @@ export default class Details extends React.Component {
           <Col md={6}>
             <Stack>
               <TrainStateCard trainState={this.props.train.state} />
-              <EmergencyBrakeCard ebrake={this.props.train.user.emergencyBrake} />
+              <CommsCard train={this.props.train} />
             </Stack>
           </Col>
           <Col md={6}>
             <Stack>
               <FailureControlCard user={this.props.train.user} />
+              <EmergencyBrakeCard ebrake={this.props.train.user.emergencyBrake} />
               <VehicleDataCard vehicle={this.props.train.vehicle} />
             </Stack>
           </Col>
