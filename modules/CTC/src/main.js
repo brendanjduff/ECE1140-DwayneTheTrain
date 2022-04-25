@@ -9,11 +9,11 @@ if (require('electron-squirrel-startup')) {
   app.quit()
 }
 
-const createWindow = () => {
+const createWindow = () => { // change window size
   // Create the browser window.
   const mainWindow = new BrowserWindow({
-    width: 400,
-    height: 700,
+    width: 1200,
+    height: 610,
     show: false,
     webPreferences: {
       contextIsolation: false,
@@ -65,11 +65,22 @@ let createTrainID = 1
 let t = new Train()
 let isHardware = false
 let hwDispatch = false
-const occupancyListGreenLine = []
-const occupancyListRedLine = []
+let occupancyListGreenLine = new Array(150).fill(false)
+let occupancyListRedLine = new Array(76).fill(false)
 
 // UX IPC
-ipcMain.on('requestData', (event, arg) => { event.reply('fetchData', {t: t, list: trainList}) })
+ipcMain.on('requestData', (event, arg) => {
+  event.reply('fetchData', {
+    t: t,
+    list: trainList,
+    occupancyListGreenLine: occupancyListGreenLine,
+    occupancyListRedLine: occupancyListRedLine,
+    redLineAuthority: redLineAuthority,
+    redLineSpeed: redLineSpeed,
+    greenLineAuthority: greenLineAuthority,
+    greenLineSpeed: greenLineSpeed
+  })
+})
 /* block = t.blockNum,
   arrivalHrs =  t.arrivalTimeHrs,
   arrivalMin = t.arrivalTimeMinutes,
@@ -78,16 +89,6 @@ ipcMain.on('requestData', (event, arg) => { event.reply('fetchData', {t: t, list
   speed = t.speed,
   authority = t.authority,
   destination = t.destination */
-
-function updateBlockOccupancy (data) {
-  /* let occupied = 0
-  for (let i = 0; i < data.length; i++) {
-    if(data[i]) {
-      occupied = i+1
-
-    }
-  } */
-}
 
 const messenger = require('messenger')
 const watchdog = messenger.createSpeaker(8000)
@@ -109,14 +110,14 @@ ipcMain.on('createTrain', (event, arg) => {
   waysideHW.shout('createTrain', t)
   waysideSW.shout('createTrain', t)
   trainModel.shout('createTrain', { id: createTrainID, hw: (hwDispatch ? false : isHardware) })
-  if(isHardware) { hwDispatch = true }
+  if (isHardware) { hwDispatch = true }
   controllerSW.shout('createTrain', createTrainID)
   trainList[createTrainID] = t
   t = new Train()
   createTrainID += 1
 })
 
-//changes in time from the schedule
+// changes in time from the schedule
 ipcMain.on('arrivalTimeHrs', (event, arg) => {
   t.arrivalTimeHrs = arg
 })
@@ -130,18 +131,19 @@ ipcMain.on('departTimeMin', (event, arg) => {
   t.departureTimeMinutes = arg
 })
 
-//changes in block occupancy
-input.on('changedBlock', (m, data) => { // change input message when integrated
-  updateBlockOccupancy(data)
+// changes in block occupancy
+input.on('wayside', (m, data) => { // change input message when integrated
+  occupancyListGreenLine = data.greenLine
+  occupancyListRedLine = data.redline
 })
 
-//Getting destination in manual mode
-input.on('destination', (m, data) => {
+// Getting destination in manual mode
+ipcMain.on('destination', (m, data) => {
   t.destination = data
 })
 
-//Make train hardware or software
-input.on('hw', (m, data) => {
+// Make train hardware or software
+ipcMain.on('hw', (m, data) => {
   isHardware = data
 })
 
