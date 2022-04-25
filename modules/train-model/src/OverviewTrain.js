@@ -12,6 +12,8 @@ export default class OverviewTrain extends React.Component {
         <td>{msToMph(trainState.velocity).toFixed(1)}</td>
         <td>{ms2ToMphs(trainState.acceleration).toFixed(1)}</td>
         <td>{toKilo(trainState.power).toFixed(0)}</td>
+        <td>{trainState.serviceBrake ? '✓' : '✗'}</td>
+        <td>{trainState.emergencyBrake ? '✓' : '✗'}</td>
         {/* critical systems */}
         <td style={{ color: (trainState.engineStatus ? 'black' : 'red') }}>{trainState.engineStatus ? '✓' : 'Failure'}</td>
         <td style={{ color: (trainState.brakeStatus ? 'black' : 'red') }}>{trainState.brakeStatus ? '✓' : 'Failure'}</td>

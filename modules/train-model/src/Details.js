@@ -13,8 +13,8 @@ export default class Details extends React.Component {
       <Container fluid key={this.props.train.trainId}>
         <Row>
           <Col xs={1}>
-            <DropdownButton title={'Train ' + this.props.train.trainId} size='sm' style={{ marginBottom: 10 + 'px' }}>
-              {this.props.trains.map((t) => (t.trainId !== this.props.train.trainId) ? (<Dropdown.Item key={t.trainId} onClick={() => { ipcRenderer.send('selectTrain', t.trainId) }}>Train {t.trainId}</Dropdown.Item>) : '')}
+            <DropdownButton title={'Train ' + this.props.train.trainId + (this.props.train.hardware ? ' (HW)' : '')} size='sm' style={{ marginBottom: 10 + 'px' }}>
+              {this.props.trains.map((t) => (t.trainId !== this.props.train.trainId) ? (<Dropdown.Item key={t.trainId} onClick={() => { ipcRenderer.send('selectTrain', t.trainId) }}>Train {t.trainId}{t.hardware ? ' (HW)' : ''}</Dropdown.Item>) : '')}
             </DropdownButton>
           </Col>
         </Row>

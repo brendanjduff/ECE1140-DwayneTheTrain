@@ -15,9 +15,11 @@ export default class Overview extends React.Component {
                 <th>Speed<br />(mph)</th>
                 <th>Accel<br />(mph/s)</th>
                 <th>Power<br />(kW)</th>
+                <th>Service<br />Brake</th>
+                <th>Emergency<br/>Brake</th>
                 {/* critical systems */}
-                <th>Engine</th>
-                <th>Brakes</th>
+                <th>Engine<br />Status</th>
+                <th>Brakes<br />Status</th>
                 <th>Signal<br />Pickup</th>
                 {/* non-vital state */}
                 <th>Doors</th>
