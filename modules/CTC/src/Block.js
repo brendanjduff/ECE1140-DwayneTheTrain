@@ -5,11 +5,11 @@ export default class Block {
     this.inMaintenance = false
   }
 
-  updateOccupancy () { 
+  updateOccupancy () {
     this.isOccupied = !(this.isOccupied)
   }
 
-  updateMaintenance () { 
+  updateMaintenance () {
     this.inMaintenance = !(this.inMaintenance)
   }
 }
