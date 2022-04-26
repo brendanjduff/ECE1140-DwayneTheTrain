@@ -7,7 +7,7 @@ export default class Train {
     }
     this.redLine = {
       speed: [],
-      authority:[]
+      authority: []
     }
     this.arrivalTimeHrs = 0
     this.arrivalTimeMinutes = 0
