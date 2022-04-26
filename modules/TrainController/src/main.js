@@ -31,7 +31,7 @@ const createWindow = () => {
   mainWindow.loadURL(MAIN_WINDOW_WEBPACK_ENTRY)
 
   // Open the DevTools.
-  if(isDev) {
+  if (isDev) {
     mainWindow.webContents.openDevTools({ mode: 'detach' })
   }
 }
@@ -61,65 +61,73 @@ app.on('activate', () => {
 // In this file you can include the rest of your app's specific main process
 // code. You can also put them in separate files and import them here.
 
-let trainsList = []
-let trainsDict = []
+const trainsList = []
+const trainsDict = []
 let selTrainId = 0
 
 ipcMain.on('RequestData', (event, arg) => {
-  if (selTrainId > 0) { event.reply('SendData', {exists: true, train: trainsDict[selTrainId], ids: trainsList.map((t) => t.id)})} 
-  else { event.reply('SendData', {exists: false})}})
+  if (selTrainId > 0) { event.reply('SendData', { exists: true, train: trainsDict[selTrainId], ids: trainsList.map((t) => t.id) }) } else { event.reply('SendData', { exists: false }) }
+})
 ipcMain.on('selectTrain', (event, arg) => { selTrainId = arg })
-ipcMain.on('spdUp', (event,arg) => {trainsDict[selTrainId].spdUp()})
-ipcMain.on('spdDown', (event,arg) => {trainsDict[selTrainId].spdDown()})
-ipcMain.on('emerBrake', (event,arg) => {trainsDict[selTrainId].emerBrake()})
-ipcMain.on('serBrake', (event,arg) => {trainsDict[selTrainId].serBrake()})
-ipcMain.on('tempUp', (event,arg) => {trainsDict[selTrainId].tempUp()})
-ipcMain.on('tempDown', (event,arg) => {trainsDict[selTrainId].tempDown()})
-ipcMain.on('lightsOnOff', (event,arg) => {trainsDict[selTrainId].lightsOnOff(arg)})
-ipcMain.on('leftDoor', (event,arg) => {trainsDict[selTrainId].leftDoor(arg)})
-ipcMain.on('rightDoor', (event,arg) => {trainsDict[selTrainId].rightDoor(arg)})
-ipcMain.on('showLocation', (event,arg) => {trainsDict[selTrainId].showLocation()})
-ipcMain.on('KpUp', (event,arg) => {trainsDict[selTrainId].KpUp()})
-ipcMain.on('KpDown', (event,arg) => {trainsDict[selTrainId].KpDown()})
-ipcMain.on('KiUp', (event,arg) => {trainsDict[selTrainId].KiUp()})
-ipcMain.on('KiDown', (event,arg) => {trainsDict[selTrainId].KiDown()})
-ipcMain.on('authorityUp', (event,arg) => {trainsDict[selTrainId].authorityUp()})
-ipcMain.on('authorityDown', (event,arg) => {trainsDict[selTrainId].authorityDown()})
-ipcMain.on('actSpeedUp', (event,arg) => {trainsDict[selTrainId].actSpeedUp()})
-ipcMain.on('actSpeedDown', (event,arg) => {trainsDict[selTrainId].actSpeedDown()})
-ipcMain.on('cmdSpeedUp', (event,arg) => {trainsDict[selTrainId].cmdSpeedUp()})
-ipcMain.on('cmdSpeedDown', (event,arg) => {trainsDict[selTrainId].cmdSpeedDown()})
-ipcMain.on('automaticMode', (event,arg) => {trainsDict[selTrainId].automaticMode()})
-ipcMain.on('manualMode', (event,arg) => {trainsDict[selTrainId].manualMode()})
-ipcMain.on('powerCalc', (event,arg) => {trainsDict[selTrainId].powerCalc()})
+ipcMain.on('spdUp', (event, arg) => { trainsDict[selTrainId].spdUp() })
+ipcMain.on('spdDown', (event, arg) => { trainsDict[selTrainId].spdDown() })
+ipcMain.on('emerBrake', (event, arg) => { trainsDict[selTrainId].emerBrake() })
+ipcMain.on('serBrake', (event, arg) => { trainsDict[selTrainId].serBrake() })
+ipcMain.on('tempUp', (event, arg) => { trainsDict[selTrainId].tempUp() })
+ipcMain.on('tempDown', (event, arg) => { trainsDict[selTrainId].tempDown() })
+ipcMain.on('lightsOnOff', (event, arg) => { trainsDict[selTrainId].lightsOnOff(arg) })
+ipcMain.on('leftDoor', (event, arg) => { trainsDict[selTrainId].leftDoor(arg) })
+ipcMain.on('rightDoor', (event, arg) => { trainsDict[selTrainId].rightDoor(arg) })
+ipcMain.on('showLocation', (event, arg) => { trainsDict[selTrainId].showLocation() })
+ipcMain.on('KpUp', (event, arg) => { trainsDict[selTrainId].KpUp() })
+ipcMain.on('KpDown', (event, arg) => { trainsDict[selTrainId].KpDown() })
+ipcMain.on('KiUp', (event, arg) => { trainsDict[selTrainId].KiUp() })
+ipcMain.on('KiDown', (event, arg) => { trainsDict[selTrainId].KiDown() })
+ipcMain.on('authorityUp', (event, arg) => { trainsDict[selTrainId].authorityUp() })
+ipcMain.on('authorityDown', (event, arg) => { trainsDict[selTrainId].authorityDown() })
+ipcMain.on('actSpeedUp', (event, arg) => { trainsDict[selTrainId].actSpeedUp() })
+ipcMain.on('actSpeedDown', (event, arg) => { trainsDict[selTrainId].actSpeedDown() })
+ipcMain.on('cmdSpeedUp', (event, arg) => { trainsDict[selTrainId].cmdSpeedUp() })
+ipcMain.on('cmdSpeedDown', (event, arg) => { trainsDict[selTrainId].cmdSpeedDown() })
+ipcMain.on('automaticMode', (event, arg) => { trainsDict[selTrainId].automaticMode() })
+ipcMain.on('manualMode', (event, arg) => { trainsDict[selTrainId].manualMode() })
+ipcMain.on('powerCalc', (event, arg) => { trainsDict[selTrainId].powerCalc() })
 
 const messenger = require('messenger')
 const input = messenger.createListener(8006)
 const watchdog = messenger.createSpeaker(8000)
 const trainModel = messenger.createSpeaker(8005)
 
-setInterval(() => { watchdog.shout('controllerSW', true)}, 100)
+setInterval(() => { watchdog.shout('controllerSW', true) }, 100)
 
 input.on('createTrain', (m, data) => {
   const newTrain = new TrainController(data)
-  if(trainsList.length === 0) {
+  if (trainsList.length === 0) {
     selTrainId = data
   }
   trainsList.push(newTrain)
   trainsDict[data] = newTrain
 })
 
-input.on('trainModel', (m,data) => {
+input.on('trainModel', (m, data) => {
   data.forEach(t => {
     const id = t.id
-    trainsDict[id].actSpeed = t['velocity']
-    trainsDict[id].cmdSpeed = t['speedCmd']
-    trainsDict[id].authority = t['authorityCmd']
-    trainsDict[id].location = t['station']
-    //trainsDict[id] = t['rightPlatform']
-    //trainsDict[id] = t['leftPlatform']
-    //trainsDict[id] = t['underground']
+    trainsDict[id].actSpeed = t.velocity
+    trainsDict[id].cmdSpeed = t.speedCmd
+    trainsDict[id].authority = t.authorityCmd
+    trainsDict[id].location = t.station
+    trainsDict[id].rightP = t['rightPlatform']
+    trainsDict[id].leftP = t['leftPlatform']
+    trainsDict[id].underG = t['underground']
+    trainsDict[id].engine = t['engineFailure']
+    trainsDict[id].brakes = t['brakeFailure']
+    trainsDict[id].signal = t['signalFailure']
   })
-  trainsList.forEach(t => {t.powerCalc()})
+  trainsList.forEach(t => { t.powerCalc() })
+  trainsList.forEach(t => { t.stop() })
+  trainsList.forEach(t => { t.leftPlat() })
+  trainsList.forEach(t => { t.rightPlat() })
+  trainsList.forEach(t => { t.underGround() })
+  trainsList.forEach(t => { t.autoSpeed() })
   trainModel.shout('controllerSW', trainsList.map((t) => t.getMessage()))
 })

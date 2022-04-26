@@ -78,6 +78,11 @@ export default class TrainModel {
     this.phys = {
       grade: 0
     }
+    this.stopping = {
+      time: 0,
+      duration: 15,
+      boarded: false
+    }
   }
 
   receiveTrackInput (data) {
@@ -106,7 +111,11 @@ export default class TrainModel {
 
   procControlOutputs () {
     this.controllerIntf.outputs.velocity = this.state.velocity
-    this.controllerIntf.outputs.speedCmd = this.thru.speedCmd
+    if (this.thru.station && this.stopping.time < this.stopping.duration) {
+      this.controllerIntf.outputs.speedCmd = 0
+    } else {
+      this.controllerIntf.outputs.speedCmd = this.thru.speedCmd
+    }
     this.controllerIntf.outputs.authorityCmd = this.thru.authorityCmd
     this.controllerIntf.outputs.station = this.thru.station
     this.controllerIntf.outputs.rightPlatform = this.thru.rightPlatform
@@ -192,23 +201,39 @@ export default class TrainModel {
     this.trackIntf.outputs.distance = this.state.velocity * dt
     this.trackIntf.outputs.passengers = this.state.passengers
 
-    // generate random deboardingPax if there are passengers on board and 
-    if(this.trackIntf.outputs.maxBoardingPax === 0 && this.trackIntf.outputs.deboardingPax === 0 && this.state.passengers > 0) {
+    // generate random deboardingPax if there are passengers on board and
+    if (this.trackIntf.outputs.maxBoardingPax === 0 && this.trackIntf.outputs.deboardingPax === 0 && this.state.passengers > 0) {
       this.trackIntf.outputs.deboardingPax = Math.floor(Math.random() * this.state.passengers)
     }
 
+    // manage stopping
+    if ((this.thru.station && this.state.velocity > 0 && this.stopping.time < this.stopping.duration) || !this.thru.station) {
+      this.stopping.time = 0
+    } else if (this.state.velocity < 1e-5) {
+      this.stopping.time += dt
+    }
+
+    // manage stopping
+    if ((this.thru.station && this.state.velocity > 0 && this.stopping.time < this.stopping.duration) || !this.thru.station) {
+      this.stopping.time = 0
+      this.stopping.boarded = false
+    } else if (this.state.velocity < 1e-5) {
+      this.stopping.time += dt
+    }
+
     // if stopped and doors and platforms match, then passengers can board and send max to track model
-    if (((this.thru.leftPlatform && this.state.leftDoors) || (this.thru.rightPlatform && this.state.rightDoors)) && this.state.velocity === 0) {
+    if (((this.thru.leftPlatform && this.state.leftDoors) || (this.thru.rightPlatform && this.state.rightDoors)) && this.state.velocity === 0 && !this.stopping.boarded) {
       this.trackIntf.outputs.maxBoardingPax = this.vehicle.paxCap - this.state.passengers + this.trackIntf.outputs.deboardingPax
     } else {
       this.trackIntf.outputs.maxBoardingPax = 0
     }
 
-    // if passengers received, 
+    // if passengers received,
     if (this.trackIntf.inputs.boardingPax > 0) {
       this.state.passengers = Math.min(this.state.passengers - this.trackIntf.outputs.deboardingPax + this.trackIntf.inputs.boardingPax, this.vehicle.paxCap)
       this.trackIntf.outputs.deboardingPax = 0
       this.trackIntf.outputs.maxBoardingPax = 0
+      this.stopping.boarded = true
     }
   }
 

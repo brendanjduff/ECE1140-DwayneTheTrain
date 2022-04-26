@@ -71,6 +71,15 @@ const trainModel = messenger.createSpeaker(8005);
 var actSpeed = 0
 var cmdSpeed = 0
 var authority = 0
+var engineFailure = 0
+var brakeFailure = 0
+var signalFailure = 0
+var underground = 0
+var rightPlatform = 0
+var leftPlatform = 0
+var station = 0
+
+var station_map = { "":0, "POPLAR":1, "CASTLE SHANNON":2, "DORMONT":3, "GLENBURY":4, "OVERBROOK":5, "INGLEWOOD":6, "CENTRAL":7, "SHADYSIDE":8, "HERRON AVE":9, "SWISSVILLE":10, "PENN STATION":11, "STEEL PLAZA":12, "FIRST AVE":13, "STATION SQUARE":14, "SOUTH HILLS JUNCTION":15, "PIONEER":16, "EDGEBROOK":17, "MT LEBANON":18, "WHITED":19, "SOUTH BANK":20, "STATION":21 }
 
 // outputs
 var powerCmd = 0
@@ -93,6 +102,13 @@ input.on('trainModel', (m, data) => {
     actSpeed = data['velocity']
     cmdSpeed = data['speedCmd']
     authority = data['authorityCmd']
+    engineFailure = data['engineFailure'] ? 1 : 0
+    brakeFailure = data['brakeFailure'] ? 1 : 0
+    signalFailure = data['signalFailure'] ? 1 : 0
+    underground = data['underground'] ? 1 : 0
+    rightPlatform = data['rightPlatform'] ? 1 : 0
+    leftPlatform = data['leftPlatform'] ? 1 : 0
+    station = station_map[data['station']]
 
     trainModel.shout('controllerHW', {
         powerCmd: powerCmd,
@@ -146,8 +162,8 @@ port.on('readable', function() {
     }
 })
 
-setInterval(() => {port.write(cmdSpeed.toFixed(0)+','+actSpeed.toFixed(0))
-console.log("SENDING: " + cmdSpeed.toFixed(0)+','+actSpeed.toFixed(0))}, 5000)
+setInterval(() => {port.write(cmdSpeed.toFixed(0)+','+actSpeed.toFixed(0)+','+authority+','+engineFailure+','+brakeFailure+','+signalFailure+','+underground+','+rightPlatform+','+leftPlatform+','+station)
+console.log("SENDING: "+cmdSpeed.toFixed(0)+','+actSpeed.toFixed(0)+','+authority+','+engineFailure+','+brakeFailure+','+signalFailure+','+underground+','+rightPlatform+','+leftPlatform+','+station)}, 5000)
 
 setInterval(() => { watchdog.shout('controllerHW', true) }, 100)
 

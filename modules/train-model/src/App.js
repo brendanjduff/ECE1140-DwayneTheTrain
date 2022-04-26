@@ -2,7 +2,6 @@ import React from 'react'
 import Overview from './Overview'
 import Details from './Details'
 import { Tabs, Tab } from 'react-bootstrap'
-import TestHeader from './TestHeader'
 const { ipcRenderer } = window.require('electron')
 
 export default class App extends React.Component {
@@ -17,10 +16,6 @@ export default class App extends React.Component {
       this.setState({ selTrain: arg.sel, trains: arg.trains })
     })
     this.intervalId = setInterval(() => { ipcRenderer.send('requestData') }, 1000 / updateRate)
-    ipcRenderer.on('resetOverview', (event, arg) => {
-      this.reset += 1
-      ipcRenderer.send('reset', true)
-    })
   }
 
   componentWillUnmount () {
@@ -30,17 +25,14 @@ export default class App extends React.Component {
 
   render () {
     return (
-      <>
-        {testMode ? <TestHeader /> : ''}
-        <Tabs defaultActiveKey='overview' key={this.reset}>
-          <Tab eventKey='overview' title='Overview'>
-            <Overview trains={this.state.trains} />
-          </Tab>
-          <Tab eventKey='details' title='Details' mountOnEnter disabled={(this.state.trains.length === 0)}>
-            <Details train={this.state.selTrain} trains={this.state.trains} />
-          </Tab>
-        </Tabs>
-      </>
+      <Tabs defaultActiveKey='overview' key={this.reset}>
+        <Tab eventKey='overview' title='Overview'>
+          <Overview trains={this.state.trains} />
+        </Tab>
+        <Tab eventKey='details' title='Details' mountOnEnter disabled={(this.state.trains.length === 0)}>
+          <Details train={this.state.selTrain} trains={this.state.trains} />
+        </Tab>
+      </Tabs>
     )
   }
 }
