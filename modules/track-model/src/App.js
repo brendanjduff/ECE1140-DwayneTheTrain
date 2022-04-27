@@ -1,5 +1,6 @@
 import React from 'react'
 import {Button,Modal} from 'react-bootstrap'
+import { parse } from 'csv-parse';
 const { ipcRenderer } = window.require('electron')
 
 export default class App extends React.Component {
@@ -10,7 +11,8 @@ export default class App extends React.Component {
   
   componentDidMount () {
     ipcRenderer.on('fetchData', (event, arg) => {
-      this.setState({ ready: arg.ready, greenLine: arg.greenLine })
+      this.setState({ ready: arg.ready, greenLine: arg.greenLine, redLine: arg.redLine }
+      )
     })
     this.intervalId = setInterval(() => { ipcRenderer.send('requestData') }, 50)
   }
@@ -23,6 +25,8 @@ export default class App extends React.Component {
   render() { return(<div>
     <h1>{this.state.ready ? this.state.greenLine.name : ""}</h1>
     {this.state.ready ? this.state.greenLine.blocks.map((b)=><ReactBlock Block = {b} />) : ""}
+    <h1>{this.state.ready ? this.state.redLine.name : ""}</h1>
+    {this.state.ready ? this.state.redLine.blocks.map((b)=><ReactBlock Block = {b} />) : ""}
   </div>
   )}
 }

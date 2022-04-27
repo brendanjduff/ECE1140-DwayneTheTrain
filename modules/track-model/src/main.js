@@ -208,10 +208,9 @@ class Beacon {
   }
 }
 
-function readInTrack(){
+function readInTrack(name){
   let rows = [];
-
-  fs.createReadStream(path.resolve(__dirname, 'GreenLine.csv'))
+  fs.createReadStream(path.resolve(__dirname, name))
     .pipe(parse({ headers: true }))
     .on('error', error => console.error(error))
     .on('data', row => {
@@ -270,7 +269,6 @@ function readInTrack(){
                                     op2[i],speedLimit[i],
                                     switchF[i],stationF[i],
                                     crossingF[i],underground[i])
-    console.log(testLine.blocks[i])
     if(switchF[i] === 'TRUE'){
       testLine.blocks[i-1].hasSwitch = true
       testLine.switches[i-1] = new Switch(false,false,i,false,i+1,false,i+1,false,'')
@@ -287,8 +285,9 @@ function readInTrack(){
 }
 
 var greenLine = new TrackLine("Green Line")
-greenLine = readInTrack()
-
+greenLine = readInTrack('GreenLine.csv')
+var redLine = new TrackLine("Red Line")
+redLine = readInTrack('RedLine.csv')
 /*
 var greenLine = new TrackLine('Green Line');
 
@@ -629,5 +628,5 @@ input.on('createTrain', (m, data) => {
   trainsDict[newTrain.trainId] = newTrain
 })
 
-ipcMain.on('requestData', (event, arg) => { event.reply('fetchData', { ready: true, greenLine: greenLine }) })
+ipcMain.on('requestData', (event, arg) => { event.reply('fetchData', { ready: true, greenLine: greenLine, redLine: redLine }) })
 setInterval(() => { watchdog.shout('trackModel', true) }, 100)
