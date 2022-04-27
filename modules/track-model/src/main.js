@@ -73,29 +73,28 @@ class TrackLine {
 }
 
 class Block{
-  constructor(blockNum,length,grade,isBidirectional,nextBlockF,nextDirF,nextBlockR,nextDirR,speedLimit,hasBeacon){
+  constructor(blockNum,length,grade,isBidirectional,nextBlock,prevBlock,op2,
+                speedLimit,hasSwitch,hasStation,hasCrossing,isUnderground){
     this.blockNum = blockNum;
     this.length = length;
     this.grade = grade;
     this.isBidirecitonal = isBidirectional;
-    this.nextBlockF = nextBlockF
-    this.nextDirF = nextDirF
-    this.nextBlockR = nextBlockR
-    this.nextDirR = nextDirR
+    this.nextBlock = nextBlock
+    this.op2 = op2
+    this.prevBlock = prevBlock
     this.speedLimit = speedLimit
-    this.hasBeacon = hasBeacon
+    this.hasSwitch = hasSwitch
+    this.hasStation = hasStation
+    this.hasCrossing = hasCrossing
+    this.isUnderground = isUnderground
+
 
     this.isOpen = true;
     this.isOccupied = false;
-    this.hasSwitch = false;
-    this.hasStation = false;
-    this.hasCrossing = false;
-    this.hasTrafficLight = false;
     this.railBroken = false;
     this.circuitBroken = false;
     this.hasPower = true;
     this.heaterStatus = false;
-    this.beacon = false;
 
     this.speedCmd = 0
     this.authCmd = 0
@@ -128,7 +127,7 @@ class Block{
 }
 
 class Switch {
-  constructor(position,edir,source,sdir,op1,dir1,op2,dir2,beaconM){
+  constructor(position,edir,source,sdir,op1,dir1,op2,dir2){
     this.position = position;
     this.source = source;
     this.edir = edir
@@ -137,7 +136,6 @@ class Switch {
     this.dir1 = dir1
     this.op2 = op2;
     this,dir2 = dir2
-    this.beaconM = beaconM
   }
 
   getNextBlock(b) {
@@ -225,34 +223,73 @@ function readInTrack(){
         console.log(`Parsed ${rowCount} rows`);
     });
   let testLine = new TrackLine("Green Line")
-  for(let i = 1; i<rows.length;i++){
-    testLine.blocks[i-1] = new Block(rows[i].BlockNumber,
-                                    rows[i].blockLength,
-                                    rows[i].BlockGrade,
-                                    rows[i].isBidirecitonal,
-                                    rows[i].NextBlock,
-                                    true,
-                                    rows[i].NextBlock,
-                                    true,
-                                    rows[i].SpeedLimit,
-                                    false)
-    if(rows[i].switch === 'TRUE'){
+  var blockNumbers = rows.map(function (val) {
+    return val.BlockNumber;
+  });
+  var blockLength = rows.map(function (val) {
+    return val.BlockLength;
+  });
+  var blockGrade = rows.map(function (val) {
+    return val.BlockGrade;
+  });
+  var isBidirecitonal = rows.map(function (val) {
+    return val.isBidirecitonal;
+  });
+  var isBidirecitonal = rows.map(function (val) {
+    return val.isBidirecitonal;
+  });
+  var nextBlock = rows.map(function (val) {
+    return val.NextBlock;
+  });
+  var prevBlock = rows.map(function (val) {
+    return val.PrevBlock;
+  });
+  var op2 = rows.map(function (val) {
+    return val.Op2;
+  });
+  var speedLimit = rows.map(function (val) {
+    return val.SpeedLimit;
+  });
+  var switchF = rows.map(function (val) {
+    return val.switchF;
+  });
+  var stationF = rows.map(function (val) {
+    return val.stationF;
+  });
+  var crossingF = rows.map(function (val) {
+    return val.crossingF;
+  });
+  var underground = rows.map(function (val) {
+    return val.underground;
+  });
+  for(let i = 1; i<151;i++){
+    console.log('reading block:' + i)
+    testLine.blocks[i] = new Block(blockNumbers[i], blockLength[i],
+                                    blockGrade[i],isBidirecitonal[i],
+                                    nextBlock[i],prevBlock[i],
+                                    op2[i],speedLimit[i],
+                                    switchF[i],stationF[i],
+                                    crossingF[i],underground[i])
+    console.log(testLine.blocks[i])
+    if(switchF[i] === 'TRUE'){
       testLine.blocks[i-1].hasSwitch = true
       testLine.switches[i-1] = new Switch(false,false,i,false,i+1,false,i+1,false,'')
     }
-    if(rows[i].station !== ''){
+    if(stationF === 'TRUE'){
       testLine.blocks[i-1].hasStation = true
-      testline.stations[i-1] = new Station(i-1,rows[i].station,rows[i].lDoor,rows[i].rDoor,)
+      testline.stations[i-1] = new Station(i-1,rows[i].station,rows[i].lDoor,rows[i].rDoor)
     }
-    if(rows[i].crossing === 'TRUE'){
+    if(crossingF[i] === 'TRUE'){
       testLine.blocks[i-1].hasCrossing = true
     }
   }
   return testLine
 }
 
-//var greenLine = readInTrack()
+var greenLine = new TrackLine("Green Line")
+greenLine = readInTrack()
 
+/*
 var greenLine = new TrackLine('Green Line');
 
   greenLine.blocks[0] = new Block(0,10000000,0,true,0,true,0,true,20)
@@ -460,7 +497,7 @@ var greenLine = new TrackLine('Green Line');
   greenLine.blocks[141].hasStation = true
 
   greenLine.blocks[19].hasCrossing = true
-  
+  */
   
 //=====================================================================================================
 
@@ -469,6 +506,7 @@ const input = messenger.createListener(8004)
 const watchdog = messenger.createSpeaker(8000)
 const trainModel = messenger.createSpeaker(8005)
 const wayside = messenger.createSpeaker(8002)
+const ctc = messenger.createSpeaker(8001)
 
 trainsList = []
 trainsDict = []
@@ -548,6 +586,12 @@ class Train {
     }
   }
 }
+
+input.on('ctc', (m, data) => {
+
+ctc.shout("ctc",TrackLine)
+})
+
 
 input.on('wayside', (m, data) => { 
   greenLine.blocks.forEach((b) => {
