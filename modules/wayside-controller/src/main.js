@@ -1,8 +1,6 @@
 const { app, BrowserWindow, ipcMain } = require('electron')
-const path = require('path')
 const isDev = require('electron-is-dev')
-
-var USING_HW = true
+const fs = require('fs')
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (require('electron-squirrel-startup')) {
@@ -13,26 +11,31 @@ if (require('electron-squirrel-startup')) {
 const createWindow = () => {
   // Create the browser window.
   const mainWindow = new BrowserWindow({
-    width: 800,
-    height: 600,
+    width: 600,
+    height: 720,
+    minWidth: 300,
+    minHeight: 500,
     show: false,
+
     webPreferences: {
       contextIsolation: false,
       nodeIntegration: true
     }
   })
 
+  // and load the index.html of the app.
+  mainWindow.loadURL(MAIN_WINDOW_WEBPACK_ENTRY)
+  // mainWindow.maximize()
+
   mainWindow.once('ready-to-show', () => {
     mainWindow.show()
   })
 
-  // and load the index.html of the app.
-  mainWindow.loadURL(MAIN_WINDOW_WEBPACK_ENTRY)
-
+  if (isDev) {
   // Open the DevTools.
-  if(isDev) {
     mainWindow.webContents.openDevTools({ mode: 'detach' })
   }
+  mainWindow.removeMenu()
 }
 
 // This method will be called when Electron has finished
@@ -57,33 +60,41 @@ app.on('activate', () => {
   }
 })
 
-// In this file you can include the rest of your app's specific main process
-// code. You can also put them in separate files and import them here.
+let inputData
+const blockArrData = []
+const trackAtrData = []
+const trackLogic = []
 
-var numBlocks = 150;
-var blockOccupancy = new Array(numBlocks).fill(false)
-var blockOperational = new Array(numBlocks).fill(true)
+export function createVar (filepath) {
+  inputData = fs.readFileSync(filepath, 'utf8', (error, data) => {
+    if (error) {
+      throw error
+    }
 
-var switches = new Array(6).fill(false)
+    return data
+  }
+  )
+  inputData = inputData.toString().split(/[\s,]+/)
 
-var arrived = false; //arrived at Dormont Station
+  for (let i = 0; i < inputData.length; i++) {
+    console.log('index ' + i + ' ' + inputData[i])
 
-var waysideDistribution = new Array(150)
-waysideDistribution = ['A','A','A','A','A','A','A','A','A','A','A','A','A','A','A','A','A','A','A','A','A','A','A','A','A',
-'B','B','B','B','B','B','B','B','B','B','B','B','B','B','B','B','B','B','B','B','B','B','B','B','B',
-'C','C','C','C','C','C','C','C','C','C','C','C','C','C','C','C','C','C',
-'D','D','D','D','D','D','D','D','D','D','D','D','D','D','D','D','D','D','D','D','D','D','D','D','D','D','D','D','D','D','D','D','D','D','D','D','D','D','D','D','D',
-'C','C','C','C','C','C','C','C','C','C','C','C','C','C','C','C','C','C','C','C',
-'B','B','B','B','B','B','B','B','B','B','B','B','B','B','B','B','B','B','B','B','B']
+    if (inputData[i].includes('LD') == true) {
+      blockArrData.push(inputData[i + 1])
+    }
+    if (inputData[i].includes('SET') == true) {
+      trackAtrData.push(inputData[i + 1])
+    }
+    if (inputData[i].includes('OR' || 'AND' || 'NOT')) {
+      trackLogic.push(inputData[i])
+    }
+  }
 
-var suggestedSpeed = new Array(numBlocks).fill(10)
-var commandedSpeed = new Array(numBlocks).fill(10)
-var suggestedAuth  = new Array(4).fill(2) //4 authorities for number of waysides
-var commandedAuth  = new Array(numBlocks).fill(2) //send authority to individual blocks
-
-//DORMONT STATION BLOCKS
-commandedSpeed[72] = 0;
-commandedAuth[72] = 0;
+  // blockArrData[0] = 1;
+  console.log(blockArrData)
+  console.log(trackAtrData)
+  console.log(trackLogic)
+}
 
 const messenger = require('messenger')
 const input = messenger.createListener(8002)    //our input
@@ -92,88 +103,28 @@ const toCtc = messenger.createSpeaker(8001)     //ctc
 const toHwws = messenger.createSpeaker(8003)    //hardware wayside controller
 const toTrack = messenger.createSpeaker(8004)   //track model
 
+var greenLineSpeed = new Array(150).fill(0);
+var greenLineAuth = new Array(150).fill(0);
+var redLineSpeed = new Array(76).fill(0);
+var redLineAuth = new Array(76).fill(0)
+var greenBlockOccupancy = new Array(150).fill(false)
+var redBlockOccupancy = new Array(76).fill(false)
+
 input.on('ctc', (m, data) => {
-	// get stuff from ctc
-	
-	waysideAPLC()
-	waysideBPLC()
-	waysideCPLC()
-	waysideDPLC()
-	
-	updateCmdSpd()
-
-  console.log(switches)
-
-	toTrack.shout("wayside", { cmdSpeed: commandedSpeed, cmdAuth: commandedAuth, switches: switches })
+  greenLineSpeed = data['greenLineSpeed']
+  greenLineAuth = data['greenLineAuth']
+  redLineSpeed = data['redLineSpeed']
+  redLineAuth = data['redLineAuth']
+	toTrack.shout("wayside", { greenLineSpeed: greenLineSpeed, greenLineAuth: greenLineAuth, redLineSpeed: redLineSpeed, redLineAuth: redLineAuth }) // also send switche positions
 })
 
 input.on('trackModel', (m, data) => {
-	data.forEach((b) => {
-		blockOccupancy[b.blockNum - 1] = b.isOccupied
+	data.greenLine.forEach((b) => {
+		greenBlockOccupancy[b.blockNum] = b.isOccupied
+	})
+  data.redLine.forEach((b) => {
+		redBlockOccupancy[b.blockNum] = b.isOccupied
 	})
 
-	ctcOutput = []
-	data.forEach((b) => {
-		ctcOutput[b.blockNum] = {num: b.blockNum, isOccupied: b.isOccupied }
-	})
-
-	toCtc.shout('wayside', ctcOutput)
+	toCtc.shout('wayside', { greenLine: greenBlockOccupancy, redLine: redBlockOccupancy })
 })
-
-input.on('waysideHW', (m, data) => {
-	switches[4] = data[4]
-})
-
-input.on('createTrain', (m, data) => {
-	suggestedSpeed.fill(data.speed)
-	suggestedAuth.fill(data.authority)
-})
-
-function waysideAPLC() {
-	if(USING_HW) {
-		toHwws.shout('waysideSW', blockOccupancy)
-	} else {
-		switches[4] = blockOccupancy[11]
-	}
-}
-
-function waysideBPLC() {
-    switches[3] = blockOccupancy[28]
-}
-
-function waysideCPLC() {
-    switches[0] = false
-    switches[5] = false
-}
-
-function waysideDPLC() {
-    switches[1] = blockOccupancy[76]
-    switches[2] = blockOccupancy[99]
-}
-
-var arr2 = false
-
-function updateCmdSpd() {
-    commandedSpeed = suggestedSpeed
-    commandedAuth.fill(2)
-    
-    commandedSpeed[71] = 7;
-    
-    if(!arrived) {
-        commandedSpeed[72] = 0;
-        commandedAuth[72] = 0;
-        
-
-        if(blockOccupancy[72] === true && !arr2) {
-            setTimeout(() => {
-                console.log("Train Departing Dormont");
-                commandedSpeed[72] = suggestedSpeed[72]
-                arrived = true;
-            }, 20000)
-        }
-
-		arr2 = true
-    } 
-}
-
-setInterval(() => { watchdog.shout('waysideSW', true) }, 100)
