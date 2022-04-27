@@ -242,14 +242,6 @@ export default class TrainModel {
     out.id = this.trainId
     return out
   }
-
-  testUpdate (dt) {
-    this.procTrackInputs()
-    this.procControlOutputs()
-    this.procControlAndUserInputs()
-    this.updatePhysics(dt)
-    this.procTrackOutputs(dt)
-  }
 }
 
 const blackpoolFlexity2 = {
