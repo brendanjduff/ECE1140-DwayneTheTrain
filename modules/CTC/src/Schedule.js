@@ -6,17 +6,27 @@ const { ipcRenderer } = window.require('electron')
 export default class Schedule extends React.Component {
   constructor (props) {
     super(props)
+    this.state = {
+      twentyEight: false,
+      twentyNine: false,
+      thirty: false,
+      first: false
+    }
   }
 
   render () {
     return (
       <Card>
         <DropdownButton title='Select Schedule...'>
-          <Dropdown.Item>Apr-28-22</Dropdown.Item>
-          <Dropdown.Item>Apr-29-22</Dropdown.Item>
-          <Dropdown.Item>Apr-30-22</Dropdown.Item>
-          <Dropdown.Item>May-1-22</Dropdown.Item>
+          <Dropdown.Item onClick={() => {this.state.twentyEight = !this.state.twentyEight}}>Apr-28-22</Dropdown.Item>
+          <Dropdown.Item onClick={() => {this.state.twentyNine = !this.state.twentyNine}}>Apr-29-22</Dropdown.Item>
+          <Dropdown.Item onClick={() => {this.state.thirty = !this.state.thirty}}>Apr-30-22</Dropdown.Item>
+          <Dropdown.Item onClick={() => {this.state.first = !this.state.first}}>May-1-22</Dropdown.Item>
         </DropdownButton>
+        {this.state.twentyEight ? <strong>Loaded Apr-28-22</strong> : ''}
+        {this.state.twentyNine ? <strong>Loaded Apr-29-22</strong> : ''}
+        {this.state.thirty ? <strong>Loaded Apr-30-22</strong> : ''}
+        {this.state.first ? <strong>Loaded May-1-22</strong> : ''}
         <br /> Departure Time: {this.props.t.departureTimeHrs + ':' + this.props.t.departureTimeMinutes}
         <br /> Hours (24H) <SmartTextInput default='' channel='departTimeHrs' validate={/.*/} /> Minutes <SmartTextInput default='' channel='departTimeMin' validate={/.*/} />
         <br /> Arrival Time: {this.props.t.arrivalTimeHrs + ':' + this.props.t.arrivalTimeMinutes}
