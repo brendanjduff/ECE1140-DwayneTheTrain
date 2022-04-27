@@ -1,6 +1,5 @@
 import React from 'react'
 import {Button,Modal} from 'react-bootstrap'
-import { parse } from 'csv-parse';
 const { ipcRenderer } = window.require('electron')
 
 export default class App extends React.Component {
@@ -24,9 +23,9 @@ export default class App extends React.Component {
   
   render() { return(<div>
     <h1>{this.state.ready ? this.state.greenLine.name : ""}</h1>
-    {this.state.ready ? this.state.greenLine.blocks.map((b)=><ReactBlock Block = {b} />) : ""}
+    {this.state.ready ? this.state.greenLine.blocks.map((b)=><ReactBlock Block = {b} color = 'success' />) : ""}
     <h1>{this.state.ready ? this.state.redLine.name : ""}</h1>
-    {this.state.ready ? this.state.redLine.blocks.map((b)=><ReactBlock Block = {b} />) : ""}
+    {this.state.ready ? this.state.redLine.blocks.map((b)=><ReactBlock Block = {b} color = 'danger'/>) : ""}
   </div>
   )}
 }
@@ -51,7 +50,7 @@ class ReactBlock extends React.Component{
   render(){
     return(
       <>
-      <Button size = "sm" variant={this.props.Block.isOccupied ? "primary" : "success"} onClick = {this.handleShow}>{this.props.Block.blockNum}</Button>
+      <Button size = "sm" variant={this.props.Block.isOccupied ? "primary" : this.props.color} onClick = {this.handleShow}>{this.props.Block.blockNum}</Button>
       <Modal show={this.state.show} onHide={this.handleClose}>
         <Modal.Header closeButton>
           <Modal.Title>Block {this.props.Block.blockNum}</Modal.Title>
