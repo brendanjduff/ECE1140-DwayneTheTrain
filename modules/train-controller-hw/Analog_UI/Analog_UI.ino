@@ -149,8 +149,9 @@ void setup()
   pinMode( Engine_Failure, OUTPUT);
   pinMode( Brake_Failure, OUTPUT);
   pinMode( Third_Failure, OUTPUT);
-  CMDSpd = 5;
+  CMDSpd = 1;
   ACTSpd = 0;
+  Authority = 1;
   EBR = false;
 }
 
