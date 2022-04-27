@@ -594,15 +594,13 @@ ctc.shout("ctc",TrackLine)
 
 input.on('wayside', (m, data) => { 
   greenLine.blocks.forEach((b) => {
-    b.speedCmd = data.cmdSpeed[b.blockNum]
-    b.authCmd = data.cmdAuth[b.blockNum]
-    greenLine.switches[13] = data.switches[4]
-    greenLine.switches[29] = data.switches[3]
-    greenLine.switches[58] = data.switches[5]
-    greenLine.switches[62] = data.switches[0]
-    greenLine.switches[76] = data.switches[1]
-    greenLine.switches[85] = data.switches[2]
+    b.speedCmd = data.greenLineSpeed[b.blockNum]
+    b.authCmd = data.greenLineAuth[b.blockNum]
   })
+  redLine.blocks.forEach((b) => {
+    b.speedCmd = data.redLineSpeed[b.blockNum]
+    b.authCmd = data.redLineAuth[b.blockNum]
+  }) // switch data is not yet sent from wayside
 
 trainModel.shout("trackModel", trainsList.map((t) => t.getMessage()))
 })
@@ -619,7 +617,7 @@ input.on('trainModel', (m, data) => {
   trainsList.forEach((t) => {
     greenLine.blocks[t.block].isOccupied = true
   })
-  wayside.shout("trackModel", greenLine.blocks)
+  wayside.shout("trackModel", { greenLine: greenLine.blocks, redLine: redLine.blocks})
 })
 
 input.on('createTrain', (m, data) => {
