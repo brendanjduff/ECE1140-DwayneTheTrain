@@ -257,7 +257,7 @@ export default class TrainController {
   }
   //Stop when authoriy is 0
   stop () {
-    if (this.automatic && (this.authority === 0 || this.cmdSpeed === 0)) {
+    if (this.automatic == true && (this.authority === 0 || this.cmdSpeed === 0)) {
       this.sBrake = true
       this.speed = 0
     }
