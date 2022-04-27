@@ -336,7 +336,6 @@ void loop()
    }
    }
    lcd.clear();
-   lcd.autoscroll();
    lcd.print("CMD:");
    lcd.print(CMDSpd * 2.25);
    lcd.print(" ACT:");
