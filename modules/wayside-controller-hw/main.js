@@ -60,15 +60,14 @@ app.on('activate', function() {
     }
 })
 
-// In this file you can include the rest of your app's specific main process
-// code. You can also put them in separate files and require them here.
+//===============================//
+// WAYSIDE CONTROLLER (HARDWARE) //
+//===============================//
 
 const messenger = require('messenger')
 const input = messenger.createListener(8003)
 const watchdog = messenger.createSpeaker(8000)
-const toCtc = messenger.createSpeaker(8001)     //ctc
 const toSwws = messenger.createSpeaker(8002)    //software wayside controller
-const toTrack = messenger.createSpeaker(8004)   //track model
 
 setInterval(() => { watchdog.shout('waysideHW', true) }, 100)
 

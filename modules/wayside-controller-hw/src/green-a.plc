@@ -1,0 +1,76 @@
+ld oc12
+st sw5
+
+ld oc29
+st sw4
+
+ld oc17
+ld oc18
+ld oc19
+ld oc20
+ld oc21
+or
+or
+or
+or
+st cr1
+
+ld oc2
+st lt1
+
+ld oc9
+st lt2
+
+ld oc16
+st lt3
+
+ld oc22
+st lt4
+
+ld oc31
+st lt5
+
+ld oc13
+ld oc14
+ld oc15
+ld oc16
+ld oc17
+ld oc18
+ld oc19
+ld oc20
+ld oc21
+ld oc22
+ld oc23
+ld oc24
+ld oc25
+ld oc26
+ld oc27
+ld oc28
+or
+or
+or
+or
+or
+or
+or
+or
+or
+or
+or
+or
+or
+or
+or
+st im1
+
+ld im1
+st mo1
+
+ld im1
+ld oc1
+ld oc2
+ld oc3
+or
+or
+or
+st mo2
