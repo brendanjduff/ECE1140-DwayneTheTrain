@@ -66,6 +66,15 @@ class ReactBlock extends React.Component{
           Occupancy: {this.props.Block.isOccupied ? "Occupied" : "Unoccupied"}<br/>
         </Modal.Body>
         <Modal.Footer>
+          <Button variant={this.props.Block.railBroken ? "danger": "success" } onClick={this.handleShow}>{this.props.Block.toggleRail}
+            Rail Status
+          </Button>
+          <Button variant={this.props.Block.circuitBroken? "danger": "success" } onClick={this.props.Block.toggleCircuit}>
+            Circuit Status
+          </Button>
+          <Button variant={!this.props.Block.hasPower? "danger": "success" } onClick={this.props.Block.togglePower}>
+            Power Status
+          </Button>
           <Button variant="secondary" onClick={this.handleClose}>
             Close
           </Button>
