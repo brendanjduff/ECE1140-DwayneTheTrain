@@ -25,7 +25,8 @@ export default class Train {
     const sec = (hour * 3600) + (min * 60)
     let distance = 0
 
-    switch (this.destination) { // make two arrays of all blocks, set each block  to 2 authority and speed limit
+    // Select Line for system to dispatch train to
+    switch (this.destination) { 
       case 'Shadyside':
         this.line = false
         break
@@ -94,12 +95,12 @@ export default class Train {
     }
 
     // return speed and authority
-    const interspeed = ((distance / sec) * 2.237).toFixed(3) // meters/s to miles/h
+    /*const interspeed = ((distance / sec) * 2.237).toFixed(3) // meters/s to miles/h
     if (interspeed <= 45) {
       // this.speed = 45
     } else {
       //
-    }
+    }*/
 
     this.redLine.authority.fill(3)
     this.redLine.speed = [

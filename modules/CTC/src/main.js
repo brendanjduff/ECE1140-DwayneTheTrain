@@ -70,7 +70,8 @@ let hwDispatch = false
 let occupancyListGreenLine = new Array(150).fill(false)
 let occupancyListRedLine = new Array(76).fill(false)
 
-// UX IPC
+
+// UX IPC: Sending any data processed to the UI
 ipcMain.on('requestData', (event, arg) => {
   event.reply('fetchData', {
     t: t,
@@ -85,15 +86,8 @@ ipcMain.on('requestData', (event, arg) => {
     throughputRed: throughputRed
   })
 })
-/* block = t.blockNum,
-  arrivalHrs =  t.arrivalTimeHrs,
-  arrivalMin = t.arrivalTimeMinutes,
-  departureHrs = t.departureTimeHrs,
-  departureMin = t.departureTimeMinutes,
-  speed = t.speed,
-  authority = t.authority,
-  destination = t.destination */
 
+//Integrated Module Communication Ports
 const messenger = require('messenger')
 const watchdog = messenger.createSpeaker(8000)
 const input = messenger.createListener(8001)
@@ -103,8 +97,10 @@ const trackModel = messenger.createSpeaker(8004)
 const trainModel = messenger.createSpeaker(8005)
 const controllerSW = messenger.createSpeaker(8006)
 
+//Update Interval
 setInterval(() => { watchdog.shout('ctc', true) }, 100)
 
+//Create Train message to other modules
 ipcMain.on('createTrain', (event, arg) => {
   t.trainId = createTrainID
   t.isDispatched = true
@@ -137,7 +133,7 @@ ipcMain.on('departTimeMin', (event, arg) => {
 // changes in block occupancy
 input.on('wayside', (m, data) => { // change input message when integrated
   occupancyListGreenLine = data.greenLine
-  occupancyListRedLine = data.redline
+  occupancyListRedLine = data.redLine 
 })
 
 //getting system throughput from Track Model
@@ -156,6 +152,7 @@ ipcMain.on('hw', (m, data) => {
   isHardware = data
 })
 
+//Suggested Speed and Authority Calculations for System
 const redLineAuthority = new Array(76).fill(3)
 const redLineSpeed = [
   11.1, 11.1, 11.1, 11.1, 11.1, 4.5, 4.5, 4.5, 11.1, 11.1, 11.1, 11.1, 11.1, 11.1, 4.5, 4.5, 4.5, 19.4, 19.4, 4.5, 4.5, 4.5, 15.3, 4.5, 4.5, 4.5, 19.4, 19.4, 19.4, 19.4, 19.4, 19.4, 19.4, 4.5, 4.5, 4.5, 19.4, 19.4, 19.4, 19.4, 19.4, 19.4, 19.4, 4.5, 4.5, 4.5, 4.5, 4.5, 4.5, 16.7, 15.3, 15.3, 15.3, 15.3, 15.3, 15.3, 15.3, 15.3, 4.5, 4.5, 4.5, 15.3, 15.3, 15.3, 15.3, 15.3, 15.3, 15.3, 15.3, 15.3, 15.3, 15.3, 15.3, 15.3, 15.3, 15.3
@@ -165,6 +162,7 @@ const greenLineSpeed = [
   4.5, 4.5, 4.5, 12.5, 12.5, 12.5, 12.5, 4.5, 4.5, 4.5, 12.5, 12.5, 19.4, 19.4, 4.5, 4.5, 4.5, 16.7, 16.7, 16.7, 4.5, 4.5, 4.5, 19.4, 19.4, 19.4, 8.3, 8.3, 8.3, 4.5, 4.5, 4.5, 8.3, 8.3, 8.3, 8.3, 8.3, 4.5, 4.5, 4.5, 8.3, 8.3, 8.3, 8.3, 8.3, 8.3, 4.5, 4.5, 4.5, 8.3, 8.3, 8.3, 8.3, 8.3, 8.3, 4.5, 4.5, 4.5, 8.3, 8.3, 8.3, 8.3, 19.4, 4.5, 4.5, 4.5, 11.1, 11.1, 11.1, 11.1, 11.1, 4.5, 4.5, 4.5, 11.1, 4.5, 4.5, 4.5, 19.4, 19.4, 19.4, 19.4, 19.4, 19.4, 19.4, 6.9, 4.5, 4.5, 4.5, 6.9, 6.9, 6.9, 6.9, 6.9, 4.5, 4.5, 4.5, 6.9, 6.9, 6.9, 7.2, 7.8, 7.8, 4.5, 4.5, 4.5, 7.8, 7.8, 7.8, 8.3, 8.3, 8.3, 4.5, 4.5, 4.5, 8.3, 4.2, 4.2, 4.2, 4.2, 4.2, 4.5, 4.5, 4.5, 5.6, 5.6, 5.6, 5.6, 5.6, 5.6, 4.5, 4.5, 4.5, 5.6, 5.6, 5.6, 5.6, 5.6, 5.6, 4.5, 4.5, 4.5, 5.6, 5.6, 5.6, 5.6, 5.6, 5.6, 5.6, 5.6
 ]
 
+//Update interval with clock cycle
 input.on('clock1', (m, data) => {
   waysideSW.shout('ctc', { greenLineSpeed: greenLineSpeed, greenLineAuth: greenLineAuthority, redLineSpeed: redLineSpeed, redLineAuth: redLineAuthority })
 })
