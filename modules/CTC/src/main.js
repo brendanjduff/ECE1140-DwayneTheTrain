@@ -108,9 +108,8 @@ setInterval(() => { watchdog.shout('ctc', true) }, 100)
 ipcMain.on('createTrain', (event, arg) => {
   t.trainId = createTrainID
   t.isDispatched = true
-  t.Destination = 'Dormont' // remove
   t.calculateSpeedAuth()
-  trackModel.shout('createTrain', {id: createTrainID, line: t.line}) // send line (red/green)
+  trackModel.shout('createTrain', {id: createTrainID, line: t.line}) 
   waysideHW.shout('createTrain', t)
   waysideSW.shout('createTrain', t)
   trainModel.shout('createTrain', { id: createTrainID, hw: (hwDispatch ? false : isHardware) })
