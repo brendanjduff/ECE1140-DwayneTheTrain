@@ -64,7 +64,6 @@ or
 st im1
 
 ld im1
-not
 st mo1
 
 ld im1
@@ -74,5 +73,4 @@ ld oc3
 or
 or
 or
-not
 st mo2
