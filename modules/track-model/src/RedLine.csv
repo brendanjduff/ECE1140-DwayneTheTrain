@@ -1,4 +1,4 @@
-﻿BlockNumber,BlockLength,BlockGrade,isBidirectional,NextBlock,PrevBlock,Op2,SpeedLimit,switch,station,lDoor,rDoor,crossing,underground,Beacon
+﻿BlockNumber,BlockLength,BlockGrade,isBidirectional,NextBlock,PrevBlock,Op2,SpeedLimit,switchF,stationF,lDoor,rDoor,crossing,underground,Beacon
 1,50,0.5,TRUE,2,16,,40,,,,,,,
 2,50,1,TRUE,3,1,,40,,,,,,,
 3,50,1.5,TRUE,4,2,,40,,,,,,,
