@@ -49,6 +49,7 @@ int LastSPDButtonState_Up = 0;
 int SPDButtonState_Down = 0; 
 int LastSPDButtonState_Down = 0;
 bool SPDButton = false;
+int mphSPD = 0;
 
 //Temperature Variables
 int TMP = 70; 
@@ -67,7 +68,7 @@ int LastKPButtonState_Down = 0;
 bool KPButton = false;
 
 //KI Variables
-long KI = 0; 
+long KI = 5; 
 int KIButtonState_Up = 0;
 int LastKIButtonState_Up = 0;
 int KIButtonState_Down = 0; 
@@ -148,8 +149,9 @@ void setup()
   pinMode( Engine_Failure, OUTPUT);
   pinMode( Brake_Failure, OUTPUT);
   pinMode( Third_Failure, OUTPUT);
-  CMDSpd = 5;
+  CMDSpd = 1;
   ACTSpd = 0;
+  Authority = 1;
   EBR = false;
 }
 
@@ -177,8 +179,8 @@ void loop()
     IntRDoors = ((String)token8).toInt();
     char * token9 = strtok(NULL, ",");
     IntLDoors = ((String)token9).toInt();
-    char * token10 = strtok(NULL, ",");
-    IntStation = ((String)token10).toInt();
+    //char * token10 = strtok(NULL, ",");
+    //IntStation = ((String)token10).toInt();
   }
    calcPower(CMDSpd, ACTSpd);
    CSPDUp(); 
@@ -336,9 +338,9 @@ void loop()
    }
    lcd.clear();
    lcd.print("CMD:");
-   lcd.print(CMDSpd);
+   lcd.print(round(CMDSpd * 2.25));
    lcd.print(" ACT:");
-   lcd.print(ACTSpd);
+   lcd.print(round(ACTSpd * 2.25));
    lcd.print(" A:");
    lcd.print(Authority);
    delay(50);
@@ -355,11 +357,12 @@ void CSPDUp()
       if(SPD < CMDSpd){
         SPD++;
       }
+      mphSPD = 2.25 * SPD;
       SPDButton = true;
       lcd.setCursor(0, 1);
       lcd.print("Speed: ");
-      lcd.print(SPD);
-      lcd.print("m/s");
+      lcd.print(mphSPD);
+      lcd.print("mph");
       delay(50);
     } 
     else {
@@ -380,11 +383,12 @@ void CSPDDown()
       if(SPD < 45){
         SPD--;
       }
+      mphSPD = 2.25 * SPD;
       SPDButton = true;
       lcd.setCursor(0, 1);
       lcd.print("Speed: ");
-      lcd.print(SPD);
-      lcd.print("m/s");
+      lcd.print(mphSPD);
+      lcd.print("mph");
       delay(50);
     } 
     else {
@@ -563,7 +567,7 @@ void CEBr()
       EBRButton = true;
       Serial.print("eBrake:");
       lcd.setCursor(0, 1);
-      lcd.print("Emergency Brake");
+      lcd.print("E-Brake: ");
       delay(50);
       if(EBR == 1){
         Serial.print("1;");
