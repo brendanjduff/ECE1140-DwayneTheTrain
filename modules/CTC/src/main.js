@@ -13,7 +13,7 @@ const createWindow = () => { // change window size
   // Create the browser window.
   const mainWindow = new BrowserWindow({
     width: 1200,
-    height: 610,
+    height: 750,
     show: false,
     webPreferences: {
       contextIsolation: false,
@@ -62,6 +62,8 @@ app.on('activate', () => {
 // Create Train
 const trainList = []
 let createTrainID = 1
+let throughputGreen = 0
+let throughputRed = 0
 let t = new Train()
 let isHardware = false
 let hwDispatch = false
@@ -78,7 +80,9 @@ ipcMain.on('requestData', (event, arg) => {
     redLineAuthority: redLineAuthority,
     redLineSpeed: redLineSpeed,
     greenLineAuthority: greenLineAuthority,
-    greenLineSpeed: greenLineSpeed
+    greenLineSpeed: greenLineSpeed,
+    throughputGreen: throughputGreen,
+    throughputRed: throughputRed
   })
 })
 /* block = t.blockNum,
@@ -104,9 +108,8 @@ setInterval(() => { watchdog.shout('ctc', true) }, 100)
 ipcMain.on('createTrain', (event, arg) => {
   t.trainId = createTrainID
   t.isDispatched = true
-  t.Destination = 'Dormont' // remove
   t.calculateSpeedAuth()
-  trackModel.shout('createTrain', createTrainID) // send line (red/green)
+  trackModel.shout('createTrain', {id: createTrainID, line: t.line}) 
   waysideHW.shout('createTrain', t)
   waysideSW.shout('createTrain', t)
   trainModel.shout('createTrain', { id: createTrainID, hw: (hwDispatch ? false : isHardware) })
@@ -135,6 +138,12 @@ ipcMain.on('departTimeMin', (event, arg) => {
 input.on('wayside', (m, data) => { // change input message when integrated
   occupancyListGreenLine = data.greenLine
   occupancyListRedLine = data.redline
+})
+
+//getting system throughput from Track Model
+input.on('trackModel', (m,data) => {
+  throughputGreen = data.greenLine
+  throughputRed = data.redLine
 })
 
 // Getting destination in manual mode

@@ -16,7 +16,8 @@ export default class App extends React.Component { // set state initial values h
       redAuth: [],
       redSpeed: [],
       greenAuth: [],
-      greenSpeed: []
+      greenSpeed: [],
+      throughput: 0
     }
   }
 
@@ -30,7 +31,9 @@ export default class App extends React.Component { // set state initial values h
         redAuth: arg.redLineAuthority,
         redSpeed: arg.redLineSpeed,
         greenAuth: arg.greenLineAuthority,
-        greenSpeed: arg.greenLineSpeed
+        greenSpeed: arg.greenLineSpeed,
+        thruG: arg.throughputGreen,
+        thruR: arg.throughputRed
       })
     })
     this.intervalId = setInterval(() => { ipcRenderer.send('requestData') }, 1000 / 20)
@@ -46,8 +49,8 @@ export default class App extends React.Component { // set state initial values h
       <>
         <Container fluid>
           <Row>
-            <Col><Schedule t={this.state.t} /></Col>
-            <Col><Track g={this.state.green} r={this.state.red} rAuth={this.state.redAuth} rSpeed={this.state.redSpeed} gAuth={this.state.greenAuth} gSpeed={this.state.greenSpeed} /></Col>
+            <Col><Schedule t={this.state.t} thruG={this.state.thruG} thruR={this.state.thruR} /></Col>
+            <Col><Track g={this.state.green} r={this.state.red} rAuth={this.state.redAuth} rSpeed={this.state.redSpeed} gAuth={this.state.greenAuth} gSpeed={this.state.greenSpeed}/></Col>
             <Col><Switch /></Col>
           </Row>
         </Container>
