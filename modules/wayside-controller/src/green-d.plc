@@ -10,7 +10,7 @@ ld oc88
 st lt12
 
 ld oc97
-st oc13
+st lt13
 
 ld oc77
 st sw2

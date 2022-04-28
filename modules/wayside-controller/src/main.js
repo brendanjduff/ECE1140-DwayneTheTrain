@@ -1,10 +1,9 @@
-//import WaysideController from './wayside-controller'
-
 const { app, BrowserWindow, ipcMain } = require('electron')
 const isDev = require('electron-is-dev')
-const fs = require('fs')
+import WaysideController from './wayside-controller'
 
-
+//SETTINGS
+const TREAT_BROKEN_AS_OCCUPIED = true
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (require('electron-squirrel-startup')) {
@@ -64,208 +63,31 @@ app.on('activate', () => {
   }
 })
 
-export default class WaysideController {
+//===============================//
+// WAYSIDE CONTROLLER (SOFTWARE) //
+//===============================//
 
-	waysideName = 'Unnamed Wayside'
-	blockOccupancy = [] //blocks occupied
-	blockOperational = [] //blocks operational
-	miscInput = [] //miscellaneous inputs
-	miscOutput = [] //miscellaneous outputs
-	switches = [] //switch positions
-	crossings = [] //crossing active
-	lights = [] //station lights
-	internal = [] //internal values
+var greenLineSwitches = new Array(6).fill(false)
+var greenLineCrossings = new Array(1).fill(false)
+var greenLineLights = new Array(13).fill(false)
+var greenLineMiscOut = new Array(4).fill(false)
+var greenLineBlockOccupancy = new Array(150).fill(false)
+var greenLineBlocksBroken = new Array(150).fill(false)
+var greenLineMiscIn = new Array(0).fill(false)
+var greenLineSpeed = new Array(150).fill(0)
+var greenLineAuth = new Array(150).fill(0)
 
-	instructions = [] //lines of source program
-	programStack = [] //evaluation stack
+var redLineSwitches = new Array(7).fill(false)
+var redLineCrossings = new Array(1).fill(false)
+var redLineLights = new Array(8).fill(false)
+var redLineMiscOut = new Array(6).fill(false)
+var redLineBlockOccupancy = new Array(76).fill(false)
+var redLineBlocksBroken = new Array(76).fill(false)
+var redLineMiscIn = new Array(0).fill(false)
+var redLineSpeed = new Array(76).fill(0)
+var redLineAuth = new Array(76).fill(0)
 
-	ip = 0 //instruction pointer
-
-	//must pass in arrays by reference
-	constructor(waysideName, blockOccupancy, blockOperational, switches, crossings, lights) {
-		this.waysideName = waysideName
-		this.blockOccupancy = blockOccupancy
-		this.blockOperational = blockOperational
-		this.switches = switches
-		this.crossings = crossings
-		this.lights = lights
-    //this.ip = ip
-	}
-
-	parse(filepath) {
-		//read source file contents
-		let inputData = fs.readFileSync(filepath, 'utf8', (error, data) => {
-			if(error) {
-				throw error
-			}
-	
-			return data
-		})
-
-    this.internal = [] //reset internal values
-    this.programStack = [] //reset evaluation stack
-    this.ip = 0 //reset instruction pointer
-	
-		//split source code on newline boundaries and remove excess whitespace
-		this.instructions = inputData.toString().trim().toLowerCase().split(/(?:[\s]*[\r\n]+[\s]*)+/).map(s => s.trim())
-	}
-
-	execute() {
-		let argText   //text of instruction argument
-		let varValue  //value read from argument or value to write from stack
-		let varValue2 //secondary value read for 2-input instruction
-
-		//iterate through lines
-		for(this.ip = 0; this.ip < this.instructions.length; this.ip++) {
-			console.log('intruction index ' + this.ip + ': ' + this.instructions[this.ip])
-	  
-			if(this.instructions[this.ip].match(/^[a-z]+/)[0] === 'ld') {
-				argText = this.getInstrArg(this.instructions[this.ip], this.ip, 'LD')
-
-				if(argText === null) {
-					continue
-				} 
-				else if(argText === '1') { //boolean value of true
-					varValue = true
-				}
-				else if(argText === '0') { //boolean value of false
-					varValue = false
-				}
-				else {
-					varValue = this.parseVar(argText)
-				}
-
-				if(varValue === true || varValue === false) {
-					this.programStack.push(varValue)
-				}
-			} 
-			else if(this.instructions[this.ip].match(/^[a-z]+/)[0] === 'st') {
-				argText = this.getInstrArg(this.instructions[this.ip], this.ip, 'LD')
-
-				if(argText === null) {
-					continue
-				}
-				else if(argText === '1' || argText === '0') { //cannot write to boolean value
-					this.reportError('Error on instruction #' + this.ip + 
-						': Cannot store into boolean literal \'' + argText + '\'')
-				}
-				else {
-					varValue = this.parseVar(argText, this.programStack.pop())
-				}
-			} 
-			else if(this.instructions[this.ip].startsWith('or') === true) {
-				varValue  = this.programStack.pop()
-				varValue2 = this.programStack.pop()
-				varValue  = varValue || varValue2 // OR
-				this.programStack.push(varValue)
-			}
-			else if(this.instructions[this.ip].startsWith('and') === true) {
-				varValue  = this.programStack.pop()
-				varValue2 = this.programStack.pop()
-				varValue  = varValue && varValue2 // AND
-				this.programStack.push(varValue)
-			} 
-			else if(this.instructions[this.ip].startsWith('not') === true) {
-				varValue  = this.programStack.pop()
-				varValue = ~varValue // NOT
-				this.programStack.push(varValue)
-			}
-			else {
-				this.reportError('Error on instruction #' + this.ip + 
-					': \'' + this.instructions[this.ip] + '\' is not a valid instruction. ')
-			}
-		}
-
-		if(this.programStack.length != 0) {
-			this.reportError('Program stack terminates as non-empty. ')
-		}
-	}
-
-	//returns argument on success, null on failure
-	getInstrArg(line, number, mnemonic) {
-		let tokens = line.split(/[\s]+/)
-				
-		if(tokens.length != 2) {
-			this.reportError('Error on instruction #' + number + ': 1 argument needed for ' +
-				mnemonic + ' instruction; found ' + (tokens.length - 1) + '. ')
-			return null
-		}
-
-		return tokens[1]
-	}
-
-	//Parses variable and writes value to it, if applicable.
-	//Returns value read from variable, if applicable.
-	//'value' argument should be specified only when writing values.
-	parseVar(varName, value) {
-		//variable location
-		var varLoc = {blockOccupancy:this.blockOccupancy, blockOperational:this.blockOperational,
-			switches:this.switches,	crossings:this.crossings, lights:this.lights, 
-			miscInput:this.miscInput, miscOutput:this.miscInput, internal:this.internal}
-		var key = '' //key for variable location
-
-		var readOnly = false //indicates a read-only variable
-		var hasIndex = true
-		var varIndex = 0 //index 0 by default
-
-		//variable names must begin with a letter and be alphanumeric
-		if(!(/^[A-Za-z][A-Za-z0-9]*$/).test(varName)) {
-			this.reportError('Error on instruction #' + this.ip + ': variable \'' + varName + 
-				'\' must begin with a letter and be alphanumeric. ')
-			return null
-		}
-		
-		//test matches for all special inputs/outputs
-		if((/sw[\d]+/).test(varName)) {
-			key = 'switches'
-		}
-		else if((/cr[\d]+/).test(varName)) {
-			key = 'crossings'
-		}
-		else if((/lt[\d]+/).test(varName)) {
-			key = 'lights'
-		}
-		else if((/mo[\d]+/).test(varName)) {
-			key = 'miscOutput'
-		}
-		else if((/oc[\d]+/).test(varName)) {
-			key = 'blockOccupancy'
-			readOnly = true
-		}	
-		else if((/op[\d]+/).test(varName)) {
-			key = 'blockOperational'
-			readOnly = true
-		}
-		else if((/mi[\d]+/).test(varName)) {
-			key = 'miscInput'
-			readOnly = true
-		}
-		else { //custom variable
-			key = 'internal'
-			hasIndex = false
-		}
-
-		//if the variable has an index that needs to be parsed, parse it
-		if(hasIndex === true) {
-			varIndex = parseInt(varName.substring(2))
-		}
-
-		if(value === true || value === false) {
-			if(readOnly) {
-				this.reportError('Error on instruction #' + this.ip + ': ' + varName + ' is a read-only variable. ')
-			} else {
-				varLoc[key][varIndex-1] = value
-			}
-		} else {
-			return varLoc[key][varIndex-1]
-		}
-	}
-
-	reportError(msg) {
-		console.log("[ERROR] Wayside '" + this.waysideName + "': " + msg)
-	}
-}
-
+//declare all messengers
 const messenger = require('messenger')
 const input = messenger.createListener(8002)    //our input
 const watchdog = messenger.createSpeaker(8000)  //system coordinator watchdog timer
@@ -273,23 +95,7 @@ const toCtc = messenger.createSpeaker(8001)     //ctc
 const toHwws = messenger.createSpeaker(8003)    //hardware wayside controller
 const toTrack = messenger.createSpeaker(8004)   //track model
 
-var greenLineSpeed = new Array(150).fill(0);
-var greenLineAuth = new Array(150).fill(0);
-
-var redLineSpeed = new Array(76).fill(0);
-var redLineAuth = new Array(76).fill(0)
-
-var greenBlockOccupancy = new Array(150).fill(false)
-var redBlockOccupancy = new Array(76).fill(false)
-
-var greenLineSwitches =  new Array(7).fill(false)
-var greenLineCrossings = new Array(1).fill(false)
-var greenLineLights = new Array(2).fill(false)
-
-var redLineSwitches =  new Array(7).fill(false)
-var redLineCrossings = new Array(1).fill(false)
-var redLineLights = new Array(2).fill(false)
-
+//system coordinator messages
 setInterval(() => { watchdog.shout('waysideSW', true) }, 100)
 
 //CTC messages
@@ -298,7 +104,7 @@ input.on('ctc', (m, data) => {
   greenLineAuth = data['greenLineAuth']
   redLineSpeed = data['redLineSpeed']
   redLineAuth = data['redLineAuth']
-  toTrack.shout("wayside", { greenLineSpeed: greenLineSpeed, greenLineAuth: greenLineAuth, redLineSpeed: redLineSpeed, redLineAuth: redLineAuth }) // also send switche positions
+  toTrack.shout("wayside", { greenLineSpeed: greenLineSpeed, greenLineAuth: greenLineAuth, redLineSpeed: redLineSpeed, redLineAuth: redLineAuth })
 })
 
 //Hardware Wayside messages
@@ -307,101 +113,126 @@ input.on('ctc', (m, data) => {
 //Track Model messages
 input.on('trackModel', (m, data) => {
   data.greenLine.forEach((b) => {
-    greenBlockOccupancy[b.blockNum] = b.isOccupied
+    greenLineBlockOccupancy[b.blockNum] = b.isOccupied || (b.railBroken && TREAT_BROKEN_AS_OCCUPIED)
+    greenLineBlocksBroken[b.blockNum] = b.railBroken
   })
   data.redLine.forEach((b) => {
-    redBlockOccupancy[b.blockNum] = b.isOccupied
+    redLineBlockOccupancy[b.blockNum] = b.isOccupied || (b.railBroken && TREAT_BROKEN_AS_OCCUPIED)
+    redLineBlocksBroken[b.blockNum] = b.railBroken
   })
 
-  toCtc.shout('wayside', { greenLine: greenBlockOccupancy, redLine: redBlockOccupancy })
+  toCtc.shout('wayside', { greenLine: greenLineBlockOccupancy, redLine: redLineBlockOccupancy })
+  updateTrack()
 })
 
-//
-const ws_gA = new WaysideController('greenLineA',greenBlockOccupancy, greenBlockOccupancy, greenLineSwitches,
-    greenLineCrossings, greenLineLights)
-ipcMain.on('PLC_GreenA',(m,data) =>
-{
-  
+//wayside objects
+const ws_gA = new WaysideController('Green-A', greenLineBlockOccupancy, greenLineBlocksBroken, greenLineMiscIn,
+  greenLineSwitches, greenLineCrossings, greenLineLights, greenLineMiscOut)
+const ws_gB = new WaysideController('Green-B', greenLineBlockOccupancy, greenLineBlocksBroken, greenLineMiscIn,
+  greenLineSwitches, greenLineCrossings, greenLineLights, greenLineMiscOut)
+const ws_gC = new WaysideController('Green-C', greenLineBlockOccupancy, greenLineBlocksBroken, greenLineMiscIn,
+  greenLineSwitches, greenLineCrossings, greenLineLights, greenLineMiscOut)
+const ws_gD = new WaysideController('Green-D', greenLineBlockOccupancy, greenLineBlocksBroken, greenLineMiscIn,
+  greenLineSwitches, greenLineCrossings, greenLineLights, greenLineMiscOut)
+const ws_rA = new WaysideController('Red-A', redLineBlockOccupancy, redLineBlocksBroken, redLineMiscIn, 
+  redLineSwitches, redLineCrossings, redLineLights, redLineMiscOut)
+const ws_rB = new WaysideController('Red-B', redLineBlockOccupancy, redLineBlocksBroken, redLineMiscIn, 
+  redLineSwitches, redLineCrossings, redLineLights, redLineMiscOut)
+const ws_rC = new WaysideController('Red-C', redLineBlockOccupancy, redLineBlocksBroken, redLineMiscIn, 
+  redLineSwitches, redLineCrossings, redLineLights, redLineMiscOut)
 
+ipcMain.on('PLC_GreenA', (m,data) => {
   ws_gA.parse(data)
   ws_gA.execute()
 })
 
-const ws_gB = new WaysideController('greenLineB',greenBlockOccupancy, greenBlockOccupancy, greenLineSwitches,
-greenLineCrossings, greenLineLights)
-
-ipcMain.on('PLC_GreenB',(m,data) =>
-{
-
-
+ipcMain.on('PLC_GreenB', (m,data) => {
   ws_gB.parse(data)
   ws_gB.execute()
 })
 
-
-const ws_gC = new WaysideController('greenLineC',greenBlockOccupancy, greenBlockOccupancy, greenLineSwitches,
-greenLineCrossings, greenLineLights)
-
-ipcMain.on('PLC_GreenC',(m,data) =>
-{
-
+ipcMain.on('PLC_GreenC', (m,data) => {
   ws_gC.parse(data)
   ws_gC.execute()
 })
 
-const ws_gD = new WaysideController('greenLineD',greenBlockOccupancy, greenBlockOccupancy, greenLineSwitches,
-greenLineCrossings, greenLineLights)
-
-
-ipcMain.on('PLC_GreenD',(m,data) =>
-{
-
+ipcMain.on('PLC_GreenD', (m,data) => {
   ws_gD.parse(data)
   ws_gD.execute()
 })
 
-const ws_rA = new WaysideController('redLineA',redBlockOccupancy, redBlockOccupancy, redLineSwitches,
-redLineCrossings, redLineLights)
-ipcMain.on('PLC_RedA',(m,data) =>
-{
-
-
+ipcMain.on('PLC_RedA', (m,data) => {
   ws_rA.parse(data)
   ws_rA.execute()
 })
 
-const ws_rB = new WaysideController('redLineB',redBlockOccupancy, redBlockOccupancy, greenLineSwitches,
-greenLineCrossings, greenLineLights)
-
-ipcMain.on('PLC_RedB',(m,data) =>
-{
-
+ipcMain.on('PLC_RedB', (m,data) => {
   ws_rB.parse(data)
   ws_rB.execute()
 })
 
-const ws_rC = new WaysideController('redLineC',greenBlockOccupancy, greenBlockOccupancy, greenLineSwitches,
-greenLineCrossings, greenLineLights)
-
-ipcMain.on('PLC_RedC',(m,data) =>
-{
-
-
+ipcMain.on('PLC_RedC', (m,data) => {
   ws_rC.parse(data)
   ws_rC.execute()
 })
 
+function updateTrack() {
+  ws_gA.execute()
+  ws_gB.execute()
+  ws_gC.execute()
+  ws_gD.execute()
+  ws_rA.execute()
+  ws_rB.execute()
+  ws_rC.execute()
+}
 
+//test function designed for Green-A
+function test1() {
+  console.log('[Set 1]')
+  greenLineBlockOccupancy[12-1] = true
+  greenLineBlockOccupancy[13-1] = true
+  ws_gA.execute()
+  console.log('sw5: ' + greenLineSwitches[5-1])
+  console.log('sw4: ' + greenLineSwitches[4-1])
+  console.log('cr1: ' + greenLineCrossings[1-1])
+  console.log('lt4: ' + greenLineLights[4-1])
+  console.log('mo1: ' + greenLineMiscOut[1-1])
+  console.log('mo2: ' + greenLineMiscOut[2-1])
 
+  console.log('[Set 2]')
+  greenLineBlockOccupancy[12-1] = true
+  greenLineBlockOccupancy[13-1] = false
+  greenLineBlockOccupancy[21-1] = true
+  greenLineBlockOccupancy[22-1] = true
+  ws_gA.execute()
+  console.log('sw5: ' + greenLineSwitches[5-1])
+  console.log('sw4: ' + greenLineSwitches[4-1])
+  console.log('cr1: ' + greenLineCrossings[1-1])
+  console.log('lt4: ' + greenLineLights[4-1])
+  console.log('mo1: ' + greenLineMiscOut[1-1])
+  console.log('mo2: ' + greenLineMiscOut[2-1])
+  
+  console.log('[Set 3]')
+  greenLineBlockOccupancy[12-1] = false
+  greenLineBlockOccupancy[13-1] = false
+  greenLineBlockOccupancy[21-1] = false
+  greenLineBlockOccupancy[22-1] = false
+  ws_gA.execute()
+  console.log('sw5: ' + greenLineSwitches[5-1])
+  console.log('sw4: ' + greenLineSwitches[4-1])
+  console.log('cr1: ' + greenLineCrossings[1-1])
+  console.log('lt4: ' + greenLineLights[4-1])
+  console.log('mo1: ' + greenLineMiscOut[1-1])
+  console.log('mo2: ' + greenLineMiscOut[2-1])
+}
 
-
-input.on('trackModel', (m, data) => {
-	data.greenLine.forEach((b) => {
-		greenBlockOccupancy[b.blockNum] = b.isOccupied
-	})
-  data.redLine.forEach((b) => {
-		redBlockOccupancy[b.blockNum] = b.isOccupied
-	})
-
-	toCtc.shout('wayside', { greenLine: greenBlockOccupancy, redLine: redBlockOccupancy })
-})
+//test function designed for Green-A-Test
+function test2() {
+  console.log('[Test 2]')
+  ws_gA.execute()
+  console.log('sw4: ' + greenLineSwitches[4-1])
+  console.log('sw5: ' + greenLineSwitches[5-1])
+  console.log('cr1: ' + greenLineCrossings[1-1])
+  console.log('mo1: ' + greenLineMiscOut[1-1])
+  console.log('mo2: ' + greenLineMiscOut[2-1])
+}
