@@ -1,5 +1,6 @@
 import React from 'react'
 import {Button,Modal} from 'react-bootstrap'
+import SmartTextInput from './SmartTextInput'
 const { ipcRenderer } = window.require('electron')
 
 export default class App extends React.Component {
@@ -26,6 +27,8 @@ export default class App extends React.Component {
     {this.state.ready ? this.state.greenLine.blocks.map((b)=><ReactBlock Block = {b} color = 'success' />) : ""}
     <h1>{this.state.ready ? this.state.redLine.name : ""}</h1>
     {this.state.ready ? this.state.redLine.blocks.map((b)=><ReactBlock Block = {b} color = 'danger'/>) : ""}
+    <h2>Environment Temp: {this.state.ready? this.state.greenLine.envTemp : ""}</h2>
+    {this.state.ready ? <SmartTextInput default = {72} channel = 'EnvironmentTemp'/>: ""}
   </div>
   )}
 }
@@ -64,15 +67,18 @@ class ReactBlock extends React.Component{
           <br/>
           Status: {this.props.Block.isOpen ? "Open" : "Closed"}<br/>
           Occupancy: {this.props.Block.isOccupied ? "Occupied" : "Unoccupied"}<br/>
+          Rail Status: {this.props.Block.railBroken ? "Broken" : "Functional"} |||
+          Circuit Status: {this.props.Block.circuitBroken ? "Broken" : "Functional"} |||
+          Power Status: {this.props.Block.hasPower ? "Powered" : "No Power"} <br/>
         </Modal.Body>
         <Modal.Footer>
-          <Button variant={this.props.Block.railBroken ? "danger": "success" } onClick={this.handleShow}>{this.props.Block.toggleRail}
+          <Button variant={this.props.Block.railBroken ? "danger": "success" } onClick={() => { ipcRenderer.send('toggleRail',this.props.Block.blockNum) }}>
             Rail Status
           </Button>
-          <Button variant={this.props.Block.circuitBroken? "danger": "success" } onClick={this.props.Block.toggleCircuit}>
+          <Button variant={this.props.Block.circuitBroken? "danger": "success" } onClick={() => {ipcRenderer.send('toggleCircuit',this.props.Block.blockNum)}}>
             Circuit Status
           </Button>
-          <Button variant={!this.props.Block.hasPower? "danger": "success" } onClick={this.props.Block.togglePower}>
+          <Button variant={!this.props.Block.hasPower? "danger": "success" } onClick={() => {ipcRenderer.send('togglePower',this.props.Block.blockNum)}}>
             Power Status
           </Button>
           <Button variant="secondary" onClick={this.handleClose}>

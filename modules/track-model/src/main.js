@@ -72,10 +72,15 @@ class TrackLine {
     
     this.heaterStatus = false;
     this.envTemp = 72
+
+    this.totalPax = 0;
   }
   
   toggleHeater(){
     this.heaterStatus = !this.heaterStatus;
+  }
+  setTemp(num){
+    this.envTemp = num
   }
 }
 
@@ -116,6 +121,7 @@ class Block{
     this.isOccupied = false;
   }
   toggleRail(){
+    console.log('toggling rail status')
     this.railBroken = !this.railBroken;
   }
   toggleCircuit(){
@@ -268,8 +274,10 @@ const trainModel = messenger.createSpeaker(8005)
 const wayside = messenger.createSpeaker(8002)
 const ctc = messenger.createSpeaker(8001)
 
-trainsList = []
-trainsDict = []
+trainsListRed = []
+trainsDictRed = []
+trainsListGreen = []
+trainsListGreen = []
 
 class Train {
   constructor(id) {
@@ -352,10 +360,16 @@ input.on('wayside', (m, data) => {
   greenLine.blocks.forEach((b) => {
     b.speedCmd = data.greenLineSpeed[b.blockNum]
     b.authCmd = data.greenLineAuth[b.blockNum]
+    b.switches = data.greenLineSwitches
+    b.lights = data.greenLineLights
+    b.crossing = data.greenLineCrossings
   })
   redLine.blocks.forEach((b) => {
     b.speedCmd = data.redLineSpeed[b.blockNum]
     b.authCmd = data.redLineAuth[b.blockNum]
+    b.switches = data.redLineSwitches
+    b.lights = data.redLineLights
+    b.crossing = data.redLineCrossings
   }) // switch data is not yet sent from wayside
 
 trainModel.shout("trackModel", trainsList.map((t) => t.getMessage()))
@@ -370,21 +384,34 @@ input.on('trainModel', (m, data) => {
   })
   data.forEach((t) => {
     const id = t.id
-    trainsDict[id].updatePosition(t['distance'])
-    trainsDict[id].updatePassengers(t['passengers'], t['maxBoardingPax'], t['deboardingPax'])
+    trainsDictRed[id].updatePosition(t['distance'])
+    trainsDictRed[id].updatePassengers(t['passengers'], t['maxBoardingPax'], t['deboardingPax'])
+    trainsDictGreen[id].updatePosition(t['distance'])
+    trainsDictGreen[id].updatePassengers(t['passengers'], t['maxBoardingPax'], t['deboardingPax'])
   })
   trainsList.forEach((t) => {
     greenLine.blocks[t.block].isOccupied = true
     redLine.blocks[t.block].isOccupied = true
   })
   wayside.shout("trackModel", { greenLine: greenLine.blocks, redLine: redLine.blocks})
+  ctc.shout("trackModel",{greenLine: greenLine.totalPax, redLine: redLine.totalPax})
 })
 
 input.on('createTrain', (m, data) => {
-  const newTrain = new Train(data)
-  trainsList.push(newTrain)
-  trainsDict[newTrain.trainId] = newTrain
+  const newTrain = new Train(data.id)
+  if(data.line){
+    trainsListGreen.push(newTrain)
+    trainsDictGreen[newTrain.trainId] = newTrain
+  }
+  else{
+    trainsListRed.push(newTrain)
+    trainsDictRed[newTrain.trainId] = newTrain
+  }
 })
 
 ipcMain.on('requestData', (event, arg) => { event.reply('fetchData', { ready: true, greenLine: greenLine, redLine: redLine }) })
+ipcMain.on('EnvironmentTemp',(event,arg) => {greenLine.setTemp(arg);redLine.setTemp(arg)})
+ipcMain.on('toggleRail',(event,arg)=>{greenLine.blocks[arg-1].toggleRail()})
+ipcMain.on('toggleCircuit',(event,arg)=>{greenLine.blocks[arg-1].toggleCircuit()})
+ipcMain.on('togglePower',(event,arg)=>{greenLine.blocks[arg-1].togglePower()})
 setInterval(() => { watchdog.shout('trackModel', true) }, 100)
