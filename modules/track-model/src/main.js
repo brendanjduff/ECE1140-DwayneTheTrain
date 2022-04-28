@@ -99,8 +99,7 @@ class TrackLine {
 
 //block object with all relevant info for the block that comes from csv as input variables
 class Block{
-  constructor(blockNum,length,grade,isBidirectional,nextBlock,prevBlock,op2,
-                speedLimit,hasSwitch,hasStation,hasCrossing,isUnderground){
+  constructor(blockNum,length,grade,isBidirectional,nextBlock,prevBlock,op2,speedLimit,hasSwitch,hasStation,hasCrossing,isUnderground){
     this.blockNum = blockNum;
     this.length = length;
     this.grade = grade;
@@ -113,8 +112,9 @@ class Block{
     this.hasStation = hasStation
     this.hasCrossing = hasCrossing
     this.isUnderground = isUnderground
+    this.hasBeacon = !!hasStation || isUnderground
+    this.beacon = false
 
-    
     this.isOpen = true;
     this.isOccupied = false;
     this.railBroken = false;
@@ -256,11 +256,9 @@ var greenLine = new TrackLine('Green Line')
         let i = row.BlockNumber
         greenLine.blocks[i-1] = new Block(i, row.BlockLength,row.BlockGrade,row.isBidirecitonal,row.NextBlock, row.PrevBlock,row.Op2,row.SpeedLimit,row.switchF,row.stationF,row.crossingF,row.underground)
         if(row.switchF === 'TRUE'){
-          greenLine.blocks[i-1].hasSwitch = true
           greenLine.switches[i-1] = new Switch(false,true,i,true,row.NextBlock,true,row.Op2,true)
         }
         if(row.stationF === 'TRUE'){
-          greenLine.blocks[i-1].hasStation = true
           greenLine.stations[i-1] = new Station(i-1,row.station,row.lDoor,row.rDoor)
         }
         if(row.crossingF === 'TRUE'){
@@ -282,11 +280,9 @@ var redLine = new TrackLine('Red Line')
         let i = row.BlockNumber
         redLine.blocks[i-1] = new Block(i, row.BlockLength,row.BlockGrade,row.isBidirecitonal,row.NextBlock,row.PrevBlock,row.Op2,row.SpeedLimit,row.switchF,row.stationF,row.crossingF,row.underground)
         if(row.switchF === 'TRUE'){
-          redLine.blocks[i-1].hasSwitch = true
           redLine.switches[i-1] = new Switch(false,false,i,false,i+1,false,i+1,false,'')
         }
         if(row.stationF === 'TRUE'){
-          redLine.blocks[i-1].hasStation = true
           redLine.stations[i-1] = new Station(i-1,row.station,row.lDoor,row.rDoor)
         }
         if(row.crossingF === 'TRUE'){
@@ -300,7 +296,8 @@ var redLine = new TrackLine('Red Line')
 //=====================================================================================================
 
 //module communications constants
-const messenger = require('messenger')
+const messenger = require('messenger');
+const { ifError } = require('assert');
 const input = messenger.createListener(8004)
 const watchdog = messenger.createSpeaker(8000)
 const trainModel = messenger.createSpeaker(8005)
@@ -312,7 +309,7 @@ const ctc = messenger.createSpeaker(8001)
 trainsListRed = []
 trainsDictRed = []
 trainsListGreen = []
-trainsListGreen = []
+trainsDictGreen = []
 
 
 //train class for communicating with train module
@@ -331,96 +328,90 @@ class Train {
 
   //updates occupancy and track state, unique call for each line
   updatePositionG(dx) {
+    console.log(this.block + " | " + this.direction + " | " + greenLine.blocks[this.block - 1].hasBeacon)
     this.position += dx
-    if (this.position > greenLine.blocks[this.block].length) {
-      this.position -= greenLine.blocks[this.block].length
+    if (this.position > greenLine.blocks[this.block - 1].length) {
+      this.position -= greenLine.blocks[this.block - 1].length
       //check switch
-      if(greenLine.blocks[this.block].hasSwitch) {
-        if(this.direction = greenLine.switches[this.block].edir) {
-          this.direction = greenLine.switches[this.block].getNextDir(this.block)
-          this.block = greenLine.switches[this.block].getNextBlock(this.block)
+      if(greenLine.blocks[this.block - 1].hasSwitch) {
+        if(this.direction === greenLine.switches[this.block - 1].edir) {
+          this.direction = greenLine.switches[this.block - 1].getNextDir(this.block)
+          this.block = greenLine.switches[this.block - 1].getNextBlock(this.block)
         }
         else if (this.direction) {
-          this.direction = greenLine.blocks[this.block].nextDirF
-          this.block = greenLine.blocks[this.block].nextBlockF
+          this.block = greenLine.blocks[this.block - 1].nextBlock
         }
         else {
-          this.direction = greenLine.blocks[this.block].nextDirR
-          this.block = greenLine.blocks[this.block].nextBlockR
+          this.block = greenLine.blocks[this.block - 1].prevBlock
         }
       }
       else if (this.direction) {
-        this.direction = greenLine.blocks[this.block].nextDirF
-        this.block = greenLine.blocks[this.block].nextBlockF
+        this.block = greenLine.blocks[this.block - 1].nextBlock
       }
       else {
-        this.direction = greenLine.blocks[this.block].nextDirR
-        this.block = greenLine.blocks[this.block].nextBlockR
+        this.block = greenLine.blocks[this.block - 1].prevBlock
       }
     }
-    if (greenLine.blocks[this.block].hasBeacon) {
-      this.station = greenLine.blocks[this.block].beacon.station
-      this.underground = greenLine.blocks[this.block].beacon.underground
-      this.leftPlatform = greenLine.blocks[this.block].beacon.leftPlatform
-      this.rightPlatform = greenLine.blocks[this.block].beacon.rightPlatform
+    /*if (greenLine.blocks[this.block - 1].hasStation) {
+      this.station = greenLine.stations[this.block - 1].name
+      this.underground = greenLine.blocks[this.block - 1].isUnderground
+      this.leftPlatform = greenLine.stations[this.block - 1].lDoor
+      this.rightPlatform = greenLine.stations[this.block - 1].rDoor
     } else {
       this.station = ''
       this.leftPlatform = false
       this.rightPlatform = false
-      this.underground = false
-    }
+      this.underground = greenLine.blocks[this.block - 1].isUnderground
+    }*/
   }
   updatePositionR(dx) {
+    console.log(this.block + " | " + this.direction)
     this.position += dx
-    if (this.position > redLine.blocks[this.block].length) {
-      this.position -= redLine.blocks[this.block].length
+    if (this.position > redLine.blocks[this.block - 1].length) {
+      this.position -= redLine.blocks[this.block - 1].length
       //check switch
-      if(redLine.blocks[this.block].hasSwitch) {
-        if(this.direction = redLine.switches[this.block].edir) {
-          this.direction = redLine.switches[this.block].getNextDir(this.block)
-          this.block = redLine.switches[this.block].getNextBlock(this.block)
+      if(redLine.blocks[this.block - 1].hasSwitch) {
+        if(this.direction === redLine.switches[this.block - 1].edir) {
+          this.direction = redLine.switches[this.block - 1].getNextDir(this.block)
+          this.block = redLine.switches[this.block - 1].getNextBlock(this.block)
         }
         else if (this.direction) {
-          this.direction = redLine.blocks[this.block].nextDirF
-          this.block = redLine.blocks[this.block].nextBlockF
+          this.block = redLine.blocks[this.block - 1].nextBlock
         }
         else {
-          this.direction = redLine.blocks[this.block].nextDirR
-          this.block = redLine.blocks[this.block].nextBlockR
+          this.block = redLine.blocks[this.block - 1].prevBlock
         }
       }
       else if (this.direction) {
-        this.direction = redLine.blocks[this.block].nextDirF
-        this.block = redLine.blocks[this.block].nextBlockF
+        this.block = redLine.blocks[this.block - 1].nextBlock
       }
       else {
-        this.direction = redLine.blocks[this.block].nextDirR
-        this.block = redLine.blocks[this.block].nextBlockR
+        this.block = redLine.blocks[this.block - 1].prevBlock
       }
     }
-    if (redLine.blocks[this.block].hasBeacon) {
-      this.station = redLine.blocks[this.block].beacon.station
-      this.underground = redLine.blocks[this.block].beacon.underground
-      this.leftPlatform = redLine.blocks[this.block].beacon.leftPlatform
-      this.rightPlatform = redLine.blocks[this.block].beacon.rightPlatform
+    if (redLine.blocks[this.block - 1].hasStation) {
+      this.station = redLine.stations[this.block - 1].name
+      this.underground = redLine.blocks[this.block - 1].isUnderground
+      this.leftPlatform = redLine.stations[this.block - 1].lDoor
+      this.rightPlatform = redLine.stations[this.block - 1].rDoor
     } else {
       this.station = ''
       this.leftPlatform = false
       this.rightPlatform = false
-      this.underground = false
+      this.underground = redLine.blocks[this.block - 1].isUnderground
     }
   }
   //puts passengers on a train when at a station
   updatePassengersG(pax, max, deboard) {
     if(max > 0) {
-      this.boardingPax = Math.min(greenLine.stations[this.block].sellTix(), max);
+      this.boardingPax = Math.min(greenLine.stations[this.block-1].sellTix(), max);
     } else {
       this.boardingPax = 0;
     }
   }
   updatePassengersR(pax, max, deboard) {
     if(max > 0) {
-      this.boardingPax = Math.min(redLine.stations[this.block].sellTix(), max);
+      this.boardingPax = Math.min(redLine.stations[this.block-1].sellTix(), max);
     } else {
       this.boardingPax = 0;
     }
@@ -430,26 +421,26 @@ class Train {
     return {
       id: this.trainId,
       boardingPax: this.boardingPax,
-      speedCmd: greenLine.blocks[this.block].speedCmd,
-      authorityCmd: greenLine.blocks[this.block].authCmd,
+      speedCmd: greenLine.blocks[this.block-1].speedCmd,
+      authorityCmd: greenLine.blocks[this.block-1].authCmd,
       station: this.station, 
       rightPlatform: this.rightPlatform,
       leftPlatform: this.leftPlatform,
       underground: this.underground,
-      grade: greenLine.blocks[this.block].grade
+      grade: greenLine.blocks[this.block-1].grade
     }
   }
   getMessageR() {
     return {
       id: this.trainId,
       boardingPax: this.boardingPax,
-      speedCmd: redLine.blocks[this.block].speedCmd,
-      authorityCmd: redLine.blocks[this.block].authCmd,
+      speedCmd: redLine.blocks[this.block-1].speedCmd,
+      authorityCmd: redLine.blocks[this.block-1].authCmd,
       station: this.station, 
       rightPlatform: this.rightPlatform,
       leftPlatform: this.leftPlatform,
       underground: this.underground,
-      grade: redLine.blocks[this.block].grade
+      grade: redLine.blocks[this.block-1].grade
     }
   }
 }
@@ -471,8 +462,7 @@ input.on('wayside', (m, data) => {
     b.crossing = data.redLineCrossings
   })
 
-trainModel.shout("trackModel", trainsList.map((t) => t.getMessageG()))
-trainModel.shout("trakcModel", trainsList.map((t) => t.getMessageR()))
+trainModel.shout("trackModel", trainsListRed.map((t) => t.getMessageR()).concat(trainsListGreen.map((t) => t.getMessageG())))
 })
 
 
@@ -486,14 +476,19 @@ input.on('trainModel', (m, data) => {
   })
   data.forEach((t) => {
     const id = t.id
+    if(trainsDictRed.hasOwnProperty(id)) {
     trainsDictRed[id].updatePositionR(t['distance'])
     trainsDictRed[id].updatePassengersR(t['passengers'], t['maxBoardingPax'], t['deboardingPax'])
+    } else if(trainsDictGreen.hasOwnProperty(id)) {
     trainsDictGreen[id].updatePositionG(t['distance'])
     trainsDictGreen[id].updatePassengersG(t['passengers'], t['maxBoardingPax'], t['deboardingPax'])
+    }
   })
-  trainsList.forEach((t) => {
-    greenLine.blocks[t.block].isOccupied = true
-    redLine.blocks[t.block].isOccupied = true
+  trainsListGreen.forEach((t) => {
+    greenLine.blocks[t.block - 1].isOccupied = true
+  })
+  trainsListRed.forEach((t) => {
+    redLine.blocks[t.block - 1].isOccupied = true
   })
   wayside.shout("trackModel", { greenLine: greenLine.blocks, redLine: redLine.blocks})
   ctc.shout("trackModel",{greenLine: greenLine.totalPax, redLine: redLine.totalPax})
@@ -504,8 +499,7 @@ input.on('createTrain', (m, data) => {
   if(data.line){
     trainsListGreen.push(newTrain)
     trainsDictGreen[newTrain.trainId] = newTrain
-  }
-  else{
+  } else {
     trainsListRed.push(newTrain)
     trainsDictRed[newTrain.trainId] = newTrain
   }

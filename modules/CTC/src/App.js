@@ -11,8 +11,8 @@ export default class App extends React.Component { // set state initial values h
     this.state = {
       t: false,
       list: [],
-      green: [],
-      red: [],
+      green: [false, false],
+      red: [false, false],
       redAuth: [],
       redSpeed: [],
       greenAuth: [],

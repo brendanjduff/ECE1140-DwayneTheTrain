@@ -15,6 +15,7 @@ export default class Track extends React.Component {
       <h6>
         {this.props.g.map((b, i) =>
           <OverlayTrigger
+            key={i}
             placement='bottom'
             overlay={
               <Tooltip id='tooltip-bottom'>
@@ -32,6 +33,7 @@ export default class Track extends React.Component {
         <br />
         {this.props.r.map((b, i) =>
           <OverlayTrigger
+            key={i}
             placement='bottom'
             overlay={
               <Tooltip id='tooltip-bottom'>

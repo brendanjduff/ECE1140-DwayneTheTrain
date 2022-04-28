@@ -102,15 +102,8 @@ setInterval(() => { watchdog.shout('waysideSW', true) }, 100)
 input.on('ctc', (m, data) => {
   greenLineSpeed = data['greenLineSpeed']
   greenLineAuth = data['greenLineAuth']
-  greenLineSwitches = data['greenLineSwitches']
-  greenLineLights = data['greenLineLights']
-  greenLineCrossings = data['greenLineCrossings']
-
   redLineSpeed = data['redLineSpeed']
   redLineAuth = data['redLineAuth']
-  redLineSwitches = data['redLineSwitches']
-  redLineLights = data['redLineLights']
-  redLineCrossings = data['redLineCrossing']
 
   toTrack.shout("wayside", { greenLineSpeed: greenLineSpeed, greenLineAuth: greenLineAuth, greenLineSwitches:greenLineSwitches, greenLineLights:greenLineLights, greenLineCrossings: greenLineCrossings, redLineSpeed: redLineSpeed, redLineAuth: redLineAuth, redLineSwitches: redLineSwitches, redLineLights:redLineLights, redLineCrossings:redLineCrossings })
 })

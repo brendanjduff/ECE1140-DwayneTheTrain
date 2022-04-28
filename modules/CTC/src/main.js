@@ -85,14 +85,6 @@ ipcMain.on('requestData', (event, arg) => {
     throughputRed: throughputRed
   })
 })
-/* block = t.blockNum,
-  arrivalHrs =  t.arrivalTimeHrs,
-  arrivalMin = t.arrivalTimeMinutes,
-  departureHrs = t.departureTimeHrs,
-  departureMin = t.departureTimeMinutes,
-  speed = t.speed,
-  authority = t.authority,
-  destination = t.destination */
 
 const messenger = require('messenger')
 const watchdog = messenger.createSpeaker(8000)
@@ -114,7 +106,7 @@ ipcMain.on('createTrain', (event, arg) => {
   waysideSW.shout('createTrain', t)
   trainModel.shout('createTrain', { id: createTrainID, hw: (hwDispatch ? false : isHardware) })
   if (isHardware) { hwDispatch = true }
-  controllerSW.shout('createTrain', createTrainID)
+  else { controllerSW.shout('createTrain', createTrainID) }
   trainList[createTrainID] = t
   t = new Train()
   createTrainID += 1
@@ -137,7 +129,7 @@ ipcMain.on('departTimeMin', (event, arg) => {
 // changes in block occupancy
 input.on('wayside', (m, data) => { // change input message when integrated
   occupancyListGreenLine = data.greenLine
-  occupancyListRedLine = data.redline
+  occupancyListRedLine = data.redLine
 })
 
 //getting system throughput from Track Model
