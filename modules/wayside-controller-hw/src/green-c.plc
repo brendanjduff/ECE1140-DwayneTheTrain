@@ -1,0 +1,15 @@
+ld oc57
+ld oc123
+or
+st lt8
+
+ld oc65
+ld oc114
+or
+st lt9
+
+ld 0
+st sw1
+
+ld 0
+st sw6
