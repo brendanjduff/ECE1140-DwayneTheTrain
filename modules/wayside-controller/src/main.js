@@ -102,9 +102,17 @@ setInterval(() => { watchdog.shout('waysideSW', true) }, 100)
 input.on('ctc', (m, data) => {
   greenLineSpeed = data['greenLineSpeed']
   greenLineAuth = data['greenLineAuth']
+  greenLineSwitches = data['greenLineSwitches']
+  greenLineLights = data['greenLineLights']
+  greenLineCrossings = data['greenLineCrossings']
+
   redLineSpeed = data['redLineSpeed']
   redLineAuth = data['redLineAuth']
-  toTrack.shout("wayside", { greenLineSpeed: greenLineSpeed, greenLineAuth: greenLineAuth, redLineSpeed: redLineSpeed, redLineAuth: redLineAuth })
+  redLineSwitches = data['redLineSwitches']
+  redLineLights = data['redLineLights']
+  redLineCrossings = data['redLineCrossing']
+
+  toTrack.shout("wayside", { greenLineSpeed: greenLineSpeed, greenLineAuth: greenLineAuth, greenLineSwitches:greenLineSwitches, greenLineLights:greenLineLights, greenLineCrossings: greenLineCrossings, redLineSpeed: redLineSpeed, redLineAuth: redLineAuth, redLineSwitches: redLineSwitches, redLineLights:redLineLights, redLineCrossings:redLineCrossings })
 })
 
 //Hardware Wayside messages
@@ -186,6 +194,7 @@ function updateTrack() {
   ws_rC.execute()
 }
 
+/*
 //test function designed for Green-A
 function test1() {
   console.log('[Set 1]')
@@ -236,3 +245,4 @@ function test2() {
   console.log('mo1: ' + greenLineMiscOut[1-1])
   console.log('mo2: ' + greenLineMiscOut[2-1])
 }
+*/
