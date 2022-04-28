@@ -68,7 +68,7 @@ int LastKPButtonState_Down = 0;
 bool KPButton = false;
 
 //KI Variables
-long KI = 0; 
+long KI = 5; 
 int KIButtonState_Up = 0;
 int LastKIButtonState_Up = 0;
 int KIButtonState_Down = 0; 
@@ -338,9 +338,9 @@ void loop()
    }
    lcd.clear();
    lcd.print("CMD:");
-   lcd.print(CMDSpd * 2.25);
+   lcd.print(round(CMDSpd * 2.25));
    lcd.print(" ACT:");
-   lcd.print(ACTSpd * 2.25);
+   lcd.print(round(ACTSpd * 2.25));
    lcd.print(" A:");
    lcd.print(Authority);
    delay(50);
@@ -567,7 +567,7 @@ void CEBr()
       EBRButton = true;
       Serial.print("eBrake:");
       lcd.setCursor(0, 1);
-      lcd.print("Emergency Brake");
+      lcd.print("E-Brake: ");
       delay(50);
       if(EBR == 1){
         Serial.print("1;");
