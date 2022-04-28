@@ -27,7 +27,7 @@ export default class App extends React.Component {
     {this.state.ready ? this.state.greenLine.blocks.map((b)=><ReactBlock Block = {b} color = 'success' />) : ""}
     <h1>{this.state.ready ? this.state.redLine.name : ""}</h1>
     {this.state.ready ? this.state.redLine.blocks.map((b)=><ReactBlock Block = {b} color = 'danger'/>) : ""}
-    <h2>Environment Temp: {this.state.ready? this.state.greenLine.envTemp : ""}</h2>
+    <h2>Environment Temp: {this.state.ready? this.state.greenLine.envTemp : ""} ||| Heater: {this.state.ready ? this.state.greenLine.heaterStatus: ""}</h2>
     {this.state.ready ? <SmartTextInput default = {72} channel = 'EnvironmentTemp'/>: ""}
   </div>
   )}

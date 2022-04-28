@@ -70,17 +70,26 @@ class TrackLine {
     this.stations = {}
     this.crossings = {}
     
-    this.heaterStatus = false;
+    this.heaterStatus = 'off';
     this.envTemp = 72
 
     this.totalPax = 0;
   }
   
-  toggleHeater(){
-    this.heaterStatus = !this.heaterStatus;
+  setHeaterOn(){
+    this.heaterStatus = 'on';
+  }
+  setHeaterOff(){
+    this.heaterStatus = 'off';
   }
   setTemp(num){
     this.envTemp = num
+    if(num < 33){
+      this.setHeaterOn()
+    }
+    else{
+      this.setHeaterOff()
+    }
   }
 
 
@@ -113,8 +122,14 @@ class Block{
     this.authCmd = 0
     
   }
-  toggleStatus(){
-    this.isOpen = !this.isOpen;
+  setStatus(){
+    if(this.railBroken || this.circuitBroken || !this.hasPower){
+      this.isOpen = false;
+      console.log("block closed")
+    }
+    else{
+      this.isOpen = true;
+    }
   }
   toggleOccupation(){
     this.isOccupied = !this.isOccupied;
@@ -123,7 +138,6 @@ class Block{
     this.isOccupied = false;
   }
   toggleRail(){
-    console.log('toggling rail status')
     this.railBroken = !this.railBroken;
   }
   toggleCircuit(){
@@ -461,6 +475,6 @@ input.on('createTrain', (m, data) => {
 ipcMain.on('requestData', (event, arg) => { event.reply('fetchData', { ready: true, greenLine: greenLine, redLine: redLine }) })
 ipcMain.on('EnvironmentTemp',(event,arg) => {greenLine.setTemp(arg);redLine.setTemp(arg)})
 ipcMain.on('toggleRail',(event,arg)=>{greenLine.blocks[arg-1].toggleRail();redLine.blocks[arg-1].toggleRail()})
-ipcMain.on('toggleCircuit',(event,arg)=>{greenLine.blocks[arg-1].toggleCircuit()})
-ipcMain.on('togglePower',(event,arg)=>{greenLine.blocks[arg-1].togglePower()})
+ipcMain.on('toggleCircuit',(event,arg)=>{greenLine.blocks[arg-1].toggleCircuit();redLine.blocks[arg-1].toggleCircuit()})
+ipcMain.on('togglePower',(event,arg)=>{greenLine.blocks[arg-1].togglePower();redLine.blocks[arg-1].toggleCircuit()})
 setInterval(() => { watchdog.shout('trackModel', true) }, 100)
