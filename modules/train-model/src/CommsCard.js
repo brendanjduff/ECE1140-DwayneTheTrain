@@ -14,7 +14,7 @@ export default class CommsCard extends React.Component {
             <strong>Station: </strong>{this.props.train.thru.station ? this.props.train.thru.station : 'None'}<br />
             <strong>Platform: </strong>{(this.props.train.thru.leftPlatform ? 'Left' : '') + ((this.props.train.thru.leftPlatform && this.props.train.thru.rightPlatform) ? '/' : '') + (this.props.train.thru.rightPlatform ? 'Right' : '') + ((!this.props.train.thru.leftPlatform && !this.props.train.thru.rightPlatform) ? 'None' : '')}<br />
             <strong>Underground: </strong>{this.props.train.thru.underground ? 'Yes' : 'No'}<br />
-            <strong>Track Grade: </strong>{this.props.train.phys.grade*100}%<br />
+            <strong>Track Grade: </strong>{this.props.train.phys.grade * 100}%<br />
           </Card.Text>
         </Card.Body>
       </Card>

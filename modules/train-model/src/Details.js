@@ -34,12 +34,10 @@ export default class Details extends React.Component {
             </Stack>
           </Col>
           <Col md={2}>
-          <Ads/>
+            <Ads />
           </Col>
-          </Row>
-          <Row>
-            
         </Row>
+        <Row />
       </Container>
     )
   }

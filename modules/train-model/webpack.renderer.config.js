@@ -13,7 +13,7 @@ rules.push({
 
 rules.push({
   test: /\.png$/,
-  use: [{loader: 'url-loader?limit=8192'}]
+  use: [{ loader: 'url-loader?limit=8192' }]
 })
 
 module.exports = {
