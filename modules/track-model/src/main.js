@@ -471,8 +471,8 @@ input.on('wayside', (m, data) => {
     b.crossing = data.redLineCrossings
   })
 
-trainModel.shout("trackModel", trainsList.map((t) => t.getMessageG()))
-trainModel.shout("trakcModel", trainsList.map((t) => t.getMessageR()))
+trainModel.shout("trackModel", trainsListRed.map((t) => t.getMessageG()))
+trainModel.shout("trakcModel", trainsListGreen.map((t) => t.getMessageR()))
 })
 
 
