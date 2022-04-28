@@ -62,6 +62,8 @@ app.on('activate', () => {
 // In this file you can include the rest of your app's specific main process
 // code. You can also put them in separate files and import them here.
 
+
+//each line, red and green, created as this object
 class TrackLine {
   constructor(name){
     this.name = name
@@ -72,7 +74,7 @@ class TrackLine {
     
     this.heaterStatus = 'off';
     this.envTemp = 72
-
+    //total passengers sent along the line throughout the day
     this.totalPax = 0;
   }
   
@@ -95,6 +97,7 @@ class TrackLine {
 
 }
 
+//block object with all relevant info for the block that comes from csv as input variables
 class Block{
   constructor(blockNum,length,grade,isBidirectional,nextBlock,prevBlock,op2,
                 speedLimit,hasSwitch,hasStation,hasCrossing,isUnderground){
@@ -111,7 +114,7 @@ class Block{
     this.hasCrossing = hasCrossing
     this.isUnderground = isUnderground
 
-
+    
     this.isOpen = true;
     this.isOccupied = false;
     this.railBroken = false;
@@ -122,6 +125,7 @@ class Block{
     this.authCmd = 0
     
   }
+  //closes block if any of the failure modes are on
   setStatus(){
     if(this.railBroken || this.circuitBroken || !this.hasPower){
       this.isOpen = false;
@@ -131,6 +135,7 @@ class Block{
       this.isOpen = true;
     }
   }
+  //keeps track of isOccupied flag, toggles when needed
   toggleOccupation(){
     this.isOccupied = !this.isOccupied;
   }
@@ -139,16 +144,22 @@ class Block{
   }
   toggleRail(){
     this.railBroken = !this.railBroken;
+    this.setStatus()
   }
   toggleCircuit(){
     this.circuitBroken = !this.circuitBroken;
+    this.setStatus()
   }
   togglePower(){
     this.hasPower = !this.hasPower;
+    this.setStatus()
   }
 
 }
 
+//switch uses position as the flag for which block it points
+//edir,sdir,dir1,dir2 all flags for determining which way the train is/should travel
+//source is block number with the switch, op1 and op2 are the potential places the switch points
 class Switch {
   constructor(position,edir,source,sdir,op1,dir1,op2,dir2){
     this.position = position;
@@ -175,7 +186,7 @@ class Switch {
       return this.op2
     }
   }
-
+  //used to determine where the train is going
   getNextDir(b) {
     if (!this.position) {
       if(this.op1 === b) {
@@ -196,6 +207,7 @@ class Switch {
   }
 }
 
+//all station info stored here, including beacon info and passengers
 class Station {
   constructor(blockNum,name,lDoor,rDoor){
     this.blockNum = blockNum
@@ -204,13 +216,14 @@ class Station {
     this.rDoor = rDoor
     this.boardingPax = 0
   }
-
+  //sell tickets randomly generates a number of passengers to board the next passing train
   sellTix(){
     this.boardingPax = Math.floor(Math.random()*20)
     return this.boardingPax
   }
 }
 
+//railway crossings, just a position flag for up or down
 class Crossing {
   constructor(blockNum,pos){
     this.blockNum = blockNum
@@ -222,6 +235,7 @@ class Crossing {
   }
 }
 
+//beacon that is used for stations and underground
 class Beacon {
   constructor(station,leftPlatform,rightPlatform,underground){
     this.station = station
@@ -231,7 +245,7 @@ class Beacon {
   }
 }
 
-
+//configs greenLine from csv file
 var greenLine = new TrackLine('Green Line')
     fs.createReadStream(path.resolve(__dirname, 'GreenLine.csv'))
       .pipe(parse({ headers: true }))
@@ -256,6 +270,8 @@ var greenLine = new TrackLine('Green Line')
       .on('end', rowCount => {
           console.log(`Parsed ${rowCount} rows`);
       });
+
+//configs redLine from csv
 var redLine = new TrackLine('Red Line')
     fs.createReadStream(path.resolve(__dirname, 'RedLine.csv'))
     .pipe(parse({ headers: true }))
@@ -283,6 +299,7 @@ var redLine = new TrackLine('Red Line')
 
 //=====================================================================================================
 
+//module communications constants
 const messenger = require('messenger')
 const input = messenger.createListener(8004)
 const watchdog = messenger.createSpeaker(8000)
@@ -290,11 +307,15 @@ const trainModel = messenger.createSpeaker(8005)
 const wayside = messenger.createSpeaker(8002)
 const ctc = messenger.createSpeaker(8001)
 
+
+//lists of trains for each line
 trainsListRed = []
 trainsDictRed = []
 trainsListGreen = []
 trainsListGreen = []
 
+
+//train class for communicating with train module
 class Train {
   constructor(id) {
     this.trainId = id
@@ -308,6 +329,7 @@ class Train {
     this.boardingPax = 0
   }
 
+  //updates occupancy and track state, unique call for each line
   updatePositionG(dx) {
     this.position += dx
     if (this.position > greenLine.blocks[this.block].length) {
@@ -388,6 +410,7 @@ class Train {
       this.underground = false
     }
   }
+  //puts passengers on a train when at a station
   updatePassengersG(pax, max, deboard) {
     if(max > 0) {
       this.boardingPax = Math.min(greenLine.stations[this.block].sellTix(), max);
@@ -402,8 +425,8 @@ class Train {
       this.boardingPax = 0;
     }
   }
-
-  getMessage() {
+  //beacon messenger
+  getMessageG() {
     return {
       id: this.trainId,
       boardingPax: this.boardingPax,
@@ -416,9 +439,22 @@ class Train {
       grade: greenLine.blocks[this.block].grade
     }
   }
+  getMessageR() {
+    return {
+      id: this.trainId,
+      boardingPax: this.boardingPax,
+      speedCmd: redLine.blocks[this.block].speedCmd,
+      authorityCmd: redLine.blocks[this.block].authCmd,
+      station: this.station, 
+      rightPlatform: this.rightPlatform,
+      leftPlatform: this.leftPlatform,
+      underground: this.underground,
+      grade: redLine.blocks[this.block].grade
+    }
+  }
 }
 
-
+//wayside updates income
 input.on('wayside', (m, data) => { 
   greenLine.blocks.forEach((b) => {
     b.speedCmd = data.greenLineSpeed[b.blockNum]
@@ -433,11 +469,14 @@ input.on('wayside', (m, data) => {
     b.switches = data.redLineSwitches
     b.lights = data.redLineLights
     b.crossing = data.redLineCrossings
-  }) // switch data is not yet sent from wayside
+  })
 
-trainModel.shout("trackModel", trainsList.map((t) => t.getMessage()))
+trainModel.shout("trackModel", trainsList.map((t) => t.getMessageG()))
+trainModel.shout("trakcModel", trainsList.map((t) => t.getMessageR()))
 })
 
+
+//train module update inputs
 input.on('trainModel', (m, data) => {
   greenLine.blocks.forEach((b) => {
     b.isOccupied = false
@@ -472,9 +511,11 @@ input.on('createTrain', (m, data) => {
   }
 })
 
+
+//front end communication logics
 ipcMain.on('requestData', (event, arg) => { event.reply('fetchData', { ready: true, greenLine: greenLine, redLine: redLine }) })
 ipcMain.on('EnvironmentTemp',(event,arg) => {greenLine.setTemp(arg);redLine.setTemp(arg)})
 ipcMain.on('toggleRail',(event,arg)=>{greenLine.blocks[arg-1].toggleRail();redLine.blocks[arg-1].toggleRail()})
 ipcMain.on('toggleCircuit',(event,arg)=>{greenLine.blocks[arg-1].toggleCircuit();redLine.blocks[arg-1].toggleCircuit()})
-ipcMain.on('togglePower',(event,arg)=>{greenLine.blocks[arg-1].togglePower();redLine.blocks[arg-1].toggleCircuit()})
+ipcMain.on('togglePower',(event,arg)=>{greenLine.blocks[arg-1].togglePower();redLine.blocks[arg-1].togglePower()})
 setInterval(() => { watchdog.shout('trackModel', true) }, 100)
