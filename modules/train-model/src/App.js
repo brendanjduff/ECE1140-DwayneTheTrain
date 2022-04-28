@@ -11,6 +11,7 @@ export default class App extends React.Component {
     this.reset = 0
   }
 
+  // Get data from the main process at 20Hz
   componentDidMount () {
     ipcRenderer.on('fetchData', (event, arg) => {
       this.setState({ selTrain: arg.sel, trains: arg.trains })
@@ -23,6 +24,9 @@ export default class App extends React.Component {
     clearInterval(this.intervalId)
   }
 
+  // Display the two different tabs
+  // The overview tab shows some information on all trains
+  // The details tab shows detailed information on a single train and the controls for Murphy & passengers
   render () {
     return (
       <Tabs defaultActiveKey='overview' key={this.reset}>

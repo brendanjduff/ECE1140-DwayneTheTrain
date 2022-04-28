@@ -9,6 +9,8 @@ export default class Ads extends React.Component {
     this.state = { adSrc: RedNotice, adNum: 1 }
   }
 
+  // Change which ad is displayed every 15 seconds
+  // We are advertising recent movies starring our namesake, Dwayne "The Rock" Johnson
   componentDidMount () {
     setInterval(() => {
       if (this.state.adNum === 1) {
@@ -19,7 +21,7 @@ export default class Ads extends React.Component {
         this.setState({ adSrc: RedNotice, adNum: 1 })
       }
       console.log(this.state.adNum)
-    }, 5000)
+    }, 15000)
   }
 
   render () {
