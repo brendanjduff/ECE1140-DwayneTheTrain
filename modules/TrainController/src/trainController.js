@@ -184,6 +184,9 @@ export default class TrainController {
   // Increase actual speed
   actSpeedUp () {
     this.mphAct = Math.floor(this.mphAct + 1)
+    if (this.mphAct > 43) {
+      this.mphAct = 43
+    }
     this.actSpeed = this.mphToMs(this.mphAct)
     return this.mphAct
   }
@@ -201,6 +204,9 @@ export default class TrainController {
   // Increase commanded speed
   cmdSpeedUp () {
     this.mphCmd = Math.floor(this.mphCmd + 1)
+    if (this.mphCmd > 43) {
+      this.mphCmd = 43
+    }
     this.cmdSpeed = this.mphToMs(this.mphCmd)
     return this.mphCmd
   }
