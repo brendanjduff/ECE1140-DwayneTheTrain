@@ -5,6 +5,7 @@ import CommsCard from './CommsCard'
 import VehicleDataCard from './VehicleDataCard'
 import FailureControlCard from './FailureControlCard'
 import EmergencyBrakeCard from './EmergencyBrakeCard'
+import Ads from './Ads'
 const { ipcRenderer } = window.require('electron')
 
 export default class Details extends React.Component {
@@ -19,19 +20,25 @@ export default class Details extends React.Component {
           </Col>
         </Row>
         <Row>
-          <Col md={6}>
+          <Col md={5}>
             <Stack>
               <TrainStateCard trainState={this.props.train.state} />
               <CommsCard train={this.props.train} />
             </Stack>
           </Col>
-          <Col md={6}>
+          <Col md={5}>
             <Stack>
               <FailureControlCard user={this.props.train.user} />
               <EmergencyBrakeCard ebrake={this.props.train.user.emergencyBrake} />
               <VehicleDataCard vehicle={this.props.train.vehicle} />
             </Stack>
           </Col>
+          <Col md={2}>
+          <Ads/>
+          </Col>
+          </Row>
+          <Row>
+            
         </Row>
       </Container>
     )

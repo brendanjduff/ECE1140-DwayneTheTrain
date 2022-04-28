@@ -1,12 +1,14 @@
 import React from 'react'
-import { Container, Row, Table } from 'react-bootstrap'
+import { Container, Row, Col, Table } from 'react-bootstrap'
 import OverviewTrain from './OverviewTrain'
+import Ads from './Ads'
 
 export default class Overview extends React.Component {
   render () {
     return (
       <Container fluid>
         <Row>
+          <Col md={10}>
           <Table striped bordered hover size='sm' responsive>
             <thead>
               <tr>
@@ -38,6 +40,10 @@ export default class Overview extends React.Component {
               {this.props.trains.map((t) => <OverviewTrain train={t} key={t.trainId} />)}
             </tbody>
           </Table>
+          </Col>
+          <Col md={2}>
+            <Ads/>
+          </Col>
         </Row>
       </Container>
     )
