@@ -426,7 +426,7 @@ class Train {
     }
   }
   //beacon messenger
-  getMessage() {
+  getMessageG() {
     return {
       id: this.trainId,
       boardingPax: this.boardingPax,
@@ -437,6 +437,19 @@ class Train {
       leftPlatform: this.leftPlatform,
       underground: this.underground,
       grade: greenLine.blocks[this.block].grade
+    }
+  }
+  getMessageR() {
+    return {
+      id: this.trainId,
+      boardingPax: this.boardingPax,
+      speedCmd: redLine.blocks[this.block].speedCmd,
+      authorityCmd: redLine.blocks[this.block].authCmd,
+      station: this.station, 
+      rightPlatform: this.rightPlatform,
+      leftPlatform: this.leftPlatform,
+      underground: this.underground,
+      grade: redLine.blocks[this.block].grade
     }
   }
 }
@@ -456,9 +469,10 @@ input.on('wayside', (m, data) => {
     b.switches = data.redLineSwitches
     b.lights = data.redLineLights
     b.crossing = data.redLineCrossings
-  }) // switch data is not yet sent from wayside
+  })
 
-trainModel.shout("trackModel", trainsList.map((t) => t.getMessage()))
+trainModel.shout("trackModel", trainsList.map((t) => t.getMessageG()))
+trainModel.shout("trakcModel", trainsList.map((t) => t.getMessageR()))
 })
 
 
@@ -503,5 +517,5 @@ ipcMain.on('requestData', (event, arg) => { event.reply('fetchData', { ready: tr
 ipcMain.on('EnvironmentTemp',(event,arg) => {greenLine.setTemp(arg);redLine.setTemp(arg)})
 ipcMain.on('toggleRail',(event,arg)=>{greenLine.blocks[arg-1].toggleRail();redLine.blocks[arg-1].toggleRail()})
 ipcMain.on('toggleCircuit',(event,arg)=>{greenLine.blocks[arg-1].toggleCircuit();redLine.blocks[arg-1].toggleCircuit()})
-ipcMain.on('togglePower',(event,arg)=>{greenLine.blocks[arg-1].togglePower();redLine.blocks[arg-1].toggleCircuit()})
+ipcMain.on('togglePower',(event,arg)=>{greenLine.blocks[arg-1].togglePower();redLine.blocks[arg-1].togglePower()})
 setInterval(() => { watchdog.shout('trackModel', true) }, 100)
