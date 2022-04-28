@@ -69,6 +69,13 @@ class TrackLine {
     this.switches = {}
     this.stations = {}
     this.crossings = {}
+    
+    this.heaterStatus = false;
+    this.envTemp = 72
+  }
+  
+  toggleHeater(){
+    this.heaterStatus = !this.heaterStatus;
   }
 }
 
@@ -94,14 +101,10 @@ class Block{
     this.railBroken = false;
     this.circuitBroken = false;
     this.hasPower = true;
-    this.heaterStatus = false;
 
     this.speedCmd = 0
     this.authCmd = 0
     
-  }
-  setBeacon(beacon){
-    this.beacon = beacon
   }
   toggleStatus(){
     this.isOpen = !this.isOpen;
@@ -121,9 +124,7 @@ class Block{
   togglePower(){
     this.hasPower = !this.hasPower;
   }
-  toggleHeater(){
-    this.heaterStatus = !this.heaterStatus;
-  }
+
 }
 
 class Switch {
@@ -238,7 +239,7 @@ var redLine = new TrackLine('Red Line')
     .pipe(parse({ headers: true }))
     .on('error', error => console.error(error))
     .on('data', row => {
-        console.log(row);
+        //console.log(row);
         //each row can be written to db
         let i = row.BlockNumber
         redLine.blocks[i-1] = new Block(i, row.BlockLength,row.BlockGrade,row.isBidirecitonal,row.NextBlock,row.PrevBlock,row.Op2,row.SpeedLimit,row.switchF,row.stationF,row.crossingF,row.underground)
