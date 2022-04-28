@@ -57,6 +57,8 @@ export default class Schedule extends React.Component {
         </DropdownButton><br />
         <Form.Check type='checkbox' label='Hardware Train' onChange={e => { ipcRenderer.send('hw', e.target.checked) }} />
         <Button variant='primary' onClick={() => { ipcRenderer.send('createTrain') }}>Dispatch Train</Button>
+        <strong>Green Line Throughput: {this.props.thruG}</strong>
+        <strong>Red Line Throughput: {this.props.thruR}</strong>
       </Card>
     )
   }
