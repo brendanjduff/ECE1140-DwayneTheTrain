@@ -1,8 +1,9 @@
 const { app, BrowserWindow, ipcMain } = require('electron')
-const path = require('path')
 const isDev = require('electron-is-dev')
+import WaysideController from './wayside-controller'
 
-var USING_HW = true
+//SETTINGS
+const TREAT_BROKEN_AS_OCCUPIED = true
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (require('electron-squirrel-startup')) {
@@ -13,26 +14,31 @@ if (require('electron-squirrel-startup')) {
 const createWindow = () => {
   // Create the browser window.
   const mainWindow = new BrowserWindow({
-    width: 800,
-    height: 600,
+    width: 600,
+    height: 720,
+    minWidth: 300,
+    minHeight: 500,
     show: false,
+
     webPreferences: {
       contextIsolation: false,
       nodeIntegration: true
     }
   })
 
+  // and load the index.html of the app.
+  mainWindow.loadURL(MAIN_WINDOW_WEBPACK_ENTRY)
+  // mainWindow.maximize()
+
   mainWindow.once('ready-to-show', () => {
     mainWindow.show()
   })
 
-  // and load the index.html of the app.
-  mainWindow.loadURL(MAIN_WINDOW_WEBPACK_ENTRY)
-
+  if (isDev) {
   // Open the DevTools.
-  if(isDev) {
     mainWindow.webContents.openDevTools({ mode: 'detach' })
   }
+  mainWindow.removeMenu()
 }
 
 // This method will be called when Electron has finished
@@ -57,34 +63,31 @@ app.on('activate', () => {
   }
 })
 
-// In this file you can include the rest of your app's specific main process
-// code. You can also put them in separate files and import them here.
+//===============================//
+// WAYSIDE CONTROLLER (SOFTWARE) //
+//===============================//
 
-var numBlocks = 150;
-var blockOccupancy = new Array(numBlocks).fill(false)
-var blockOperational = new Array(numBlocks).fill(true)
+var greenLineSwitches = new Array(6).fill(false)
+var greenLineCrossings = new Array(1).fill(false)
+var greenLineLights = new Array(13).fill(false)
+var greenLineMiscOut = new Array(4).fill(false)
+var greenLineBlockOccupancy = new Array(150).fill(false)
+var greenLineBlocksBroken = new Array(150).fill(false)
+var greenLineMiscIn = new Array(0).fill(false)
+var greenLineSpeed = new Array(150).fill(0)
+var greenLineAuth = new Array(150).fill(0)
 
-var switches = new Array(6).fill(false)
+var redLineSwitches = new Array(7).fill(false)
+var redLineCrossings = new Array(1).fill(false)
+var redLineLights = new Array(8).fill(false)
+var redLineMiscOut = new Array(6).fill(false)
+var redLineBlockOccupancy = new Array(76).fill(false)
+var redLineBlocksBroken = new Array(76).fill(false)
+var redLineMiscIn = new Array(0).fill(false)
+var redLineSpeed = new Array(76).fill(0)
+var redLineAuth = new Array(76).fill(0)
 
-var arrived = false; //arrived at Dormont Station
-
-var waysideDistribution = new Array(150)
-waysideDistribution = ['A','A','A','A','A','A','A','A','A','A','A','A','A','A','A','A','A','A','A','A','A','A','A','A','A',
-'B','B','B','B','B','B','B','B','B','B','B','B','B','B','B','B','B','B','B','B','B','B','B','B','B',
-'C','C','C','C','C','C','C','C','C','C','C','C','C','C','C','C','C','C',
-'D','D','D','D','D','D','D','D','D','D','D','D','D','D','D','D','D','D','D','D','D','D','D','D','D','D','D','D','D','D','D','D','D','D','D','D','D','D','D','D','D',
-'C','C','C','C','C','C','C','C','C','C','C','C','C','C','C','C','C','C','C','C',
-'B','B','B','B','B','B','B','B','B','B','B','B','B','B','B','B','B','B','B','B','B']
-
-var suggestedSpeed = new Array(numBlocks).fill(10)
-var commandedSpeed = new Array(numBlocks).fill(10)
-var suggestedAuth  = new Array(4).fill(2) //4 authorities for number of waysides
-var commandedAuth  = new Array(numBlocks).fill(2) //send authority to individual blocks
-
-//DORMONT STATION BLOCKS
-commandedSpeed[72] = 0;
-commandedAuth[72] = 0;
-
+//declare all messengers
 const messenger = require('messenger')
 const input = messenger.createListener(8002)    //our input
 const watchdog = messenger.createSpeaker(8000)  //system coordinator watchdog timer
@@ -92,88 +95,147 @@ const toCtc = messenger.createSpeaker(8001)     //ctc
 const toHwws = messenger.createSpeaker(8003)    //hardware wayside controller
 const toTrack = messenger.createSpeaker(8004)   //track model
 
-input.on('ctc', (m, data) => {
-	// get stuff from ctc
-	
-	waysideAPLC()
-	waysideBPLC()
-	waysideCPLC()
-	waysideDPLC()
-	
-	updateCmdSpd()
-
-  console.log(switches)
-
-	toTrack.shout("wayside", { cmdSpeed: commandedSpeed, cmdAuth: commandedAuth, switches: switches })
-})
-
-input.on('trackModel', (m, data) => {
-	data.forEach((b) => {
-		blockOccupancy[b.blockNum - 1] = b.isOccupied
-	})
-
-	ctcOutput = []
-	data.forEach((b) => {
-		ctcOutput[b.blockNum] = {num: b.blockNum, isOccupied: b.isOccupied }
-	})
-
-	toCtc.shout('wayside', ctcOutput)
-})
-
-input.on('waysideHW', (m, data) => {
-	switches[4] = data[4]
-})
-
-input.on('createTrain', (m, data) => {
-	suggestedSpeed.fill(data.speed)
-	suggestedAuth.fill(data.authority)
-})
-
-function waysideAPLC() {
-	if(USING_HW) {
-		toHwws.shout('waysideSW', blockOccupancy)
-	} else {
-		switches[4] = blockOccupancy[11]
-	}
-}
-
-function waysideBPLC() {
-    switches[3] = blockOccupancy[28]
-}
-
-function waysideCPLC() {
-    switches[0] = false
-    switches[5] = false
-}
-
-function waysideDPLC() {
-    switches[1] = blockOccupancy[76]
-    switches[2] = blockOccupancy[99]
-}
-
-var arr2 = false
-
-function updateCmdSpd() {
-    commandedSpeed = suggestedSpeed
-    commandedAuth.fill(2)
-    
-    commandedSpeed[71] = 7;
-    
-    if(!arrived) {
-        commandedSpeed[72] = 0;
-        commandedAuth[72] = 0;
-        
-
-        if(blockOccupancy[72] === true && !arr2) {
-            setTimeout(() => {
-                console.log("Train Departing Dormont");
-                commandedSpeed[72] = suggestedSpeed[72]
-                arrived = true;
-            }, 20000)
-        }
-
-		arr2 = true
-    } 
-}
-
+//system coordinator messages
 setInterval(() => { watchdog.shout('waysideSW', true) }, 100)
+
+//CTC messages
+input.on('ctc', (m, data) => {
+  greenLineSpeed = data['greenLineSpeed']
+  greenLineAuth = data['greenLineAuth']
+  redLineSpeed = data['redLineSpeed']
+  redLineAuth = data['redLineAuth']
+
+  toTrack.shout("wayside", { greenLineSpeed: greenLineSpeed, greenLineAuth: greenLineAuth, greenLineSwitches:greenLineSwitches, greenLineLights:greenLineLights, greenLineCrossings: greenLineCrossings, redLineSpeed: redLineSpeed, redLineAuth: redLineAuth, redLineSwitches: redLineSwitches, redLineLights:redLineLights, redLineCrossings:redLineCrossings })
+})
+
+//Hardware Wayside messages
+
+
+//Track Model messages
+input.on('trackModel', (m, data) => {
+  data.greenLine.forEach((b) => {
+    greenLineBlockOccupancy[b.blockNum] = b.isOccupied || (b.railBroken && TREAT_BROKEN_AS_OCCUPIED)
+    greenLineBlocksBroken[b.blockNum] = b.railBroken
+  })
+  data.redLine.forEach((b) => {
+    redLineBlockOccupancy[b.blockNum] = b.isOccupied || (b.railBroken && TREAT_BROKEN_AS_OCCUPIED)
+    redLineBlocksBroken[b.blockNum] = b.railBroken
+  })
+
+  toCtc.shout('wayside', { greenLine: greenLineBlockOccupancy, redLine: redLineBlockOccupancy })
+  updateTrack()
+})
+
+//wayside objects
+const ws_gA = new WaysideController('Green-A', greenLineBlockOccupancy, greenLineBlocksBroken, greenLineMiscIn,
+  greenLineSwitches, greenLineCrossings, greenLineLights, greenLineMiscOut)
+const ws_gB = new WaysideController('Green-B', greenLineBlockOccupancy, greenLineBlocksBroken, greenLineMiscIn,
+  greenLineSwitches, greenLineCrossings, greenLineLights, greenLineMiscOut)
+const ws_gC = new WaysideController('Green-C', greenLineBlockOccupancy, greenLineBlocksBroken, greenLineMiscIn,
+  greenLineSwitches, greenLineCrossings, greenLineLights, greenLineMiscOut)
+const ws_gD = new WaysideController('Green-D', greenLineBlockOccupancy, greenLineBlocksBroken, greenLineMiscIn,
+  greenLineSwitches, greenLineCrossings, greenLineLights, greenLineMiscOut)
+const ws_rA = new WaysideController('Red-A', redLineBlockOccupancy, redLineBlocksBroken, redLineMiscIn, 
+  redLineSwitches, redLineCrossings, redLineLights, redLineMiscOut)
+const ws_rB = new WaysideController('Red-B', redLineBlockOccupancy, redLineBlocksBroken, redLineMiscIn, 
+  redLineSwitches, redLineCrossings, redLineLights, redLineMiscOut)
+const ws_rC = new WaysideController('Red-C', redLineBlockOccupancy, redLineBlocksBroken, redLineMiscIn, 
+  redLineSwitches, redLineCrossings, redLineLights, redLineMiscOut)
+
+ipcMain.on('PLC_GreenA', (m,data) => {
+  ws_gA.parse(data)
+  ws_gA.execute()
+})
+
+ipcMain.on('PLC_GreenB', (m,data) => {
+  ws_gB.parse(data)
+  ws_gB.execute()
+})
+
+ipcMain.on('PLC_GreenC', (m,data) => {
+  ws_gC.parse(data)
+  ws_gC.execute()
+})
+
+ipcMain.on('PLC_GreenD', (m,data) => {
+  ws_gD.parse(data)
+  ws_gD.execute()
+})
+
+ipcMain.on('PLC_RedA', (m,data) => {
+  ws_rA.parse(data)
+  ws_rA.execute()
+})
+
+ipcMain.on('PLC_RedB', (m,data) => {
+  ws_rB.parse(data)
+  ws_rB.execute()
+})
+
+ipcMain.on('PLC_RedC', (m,data) => {
+  ws_rC.parse(data)
+  ws_rC.execute()
+})
+
+function updateTrack() {
+  ws_gA.execute()
+  ws_gB.execute()
+  ws_gC.execute()
+  ws_gD.execute()
+  ws_rA.execute()
+  ws_rB.execute()
+  ws_rC.execute()
+}
+
+/*
+//test function designed for Green-A
+function test1() {
+  console.log('[Set 1]')
+  greenLineBlockOccupancy[12-1] = true
+  greenLineBlockOccupancy[13-1] = true
+  ws_gA.execute()
+  console.log('sw5: ' + greenLineSwitches[5-1])
+  console.log('sw4: ' + greenLineSwitches[4-1])
+  console.log('cr1: ' + greenLineCrossings[1-1])
+  console.log('lt4: ' + greenLineLights[4-1])
+  console.log('mo1: ' + greenLineMiscOut[1-1])
+  console.log('mo2: ' + greenLineMiscOut[2-1])
+
+  console.log('[Set 2]')
+  greenLineBlockOccupancy[12-1] = true
+  greenLineBlockOccupancy[13-1] = false
+  greenLineBlockOccupancy[21-1] = true
+  greenLineBlockOccupancy[22-1] = true
+  ws_gA.execute()
+  console.log('sw5: ' + greenLineSwitches[5-1])
+  console.log('sw4: ' + greenLineSwitches[4-1])
+  console.log('cr1: ' + greenLineCrossings[1-1])
+  console.log('lt4: ' + greenLineLights[4-1])
+  console.log('mo1: ' + greenLineMiscOut[1-1])
+  console.log('mo2: ' + greenLineMiscOut[2-1])
+  
+  console.log('[Set 3]')
+  greenLineBlockOccupancy[12-1] = false
+  greenLineBlockOccupancy[13-1] = false
+  greenLineBlockOccupancy[21-1] = false
+  greenLineBlockOccupancy[22-1] = false
+  ws_gA.execute()
+  console.log('sw5: ' + greenLineSwitches[5-1])
+  console.log('sw4: ' + greenLineSwitches[4-1])
+  console.log('cr1: ' + greenLineCrossings[1-1])
+  console.log('lt4: ' + greenLineLights[4-1])
+  console.log('mo1: ' + greenLineMiscOut[1-1])
+  console.log('mo2: ' + greenLineMiscOut[2-1])
+}
+
+//test function designed for Green-A-Test
+function test2() {
+  console.log('[Test 2]')
+  ws_gA.execute()
+  console.log('sw4: ' + greenLineSwitches[4-1])
+  console.log('sw5: ' + greenLineSwitches[5-1])
+  console.log('cr1: ' + greenLineCrossings[1-1])
+  console.log('mo1: ' + greenLineMiscOut[1-1])
+  console.log('mo2: ' + greenLineMiscOut[2-1])
+}
+*/

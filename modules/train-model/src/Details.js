@@ -1,10 +1,11 @@
 import React from 'react'
 import { Container, Row, Col, DropdownButton, Dropdown, Stack } from 'react-bootstrap'
 import TrainStateCard from './TrainStateCard'
+import CommsCard from './CommsCard'
 import VehicleDataCard from './VehicleDataCard'
 import FailureControlCard from './FailureControlCard'
-import TestCards from './TestCards'
 import EmergencyBrakeCard from './EmergencyBrakeCard'
+import Ads from './Ads'
 const { ipcRenderer } = window.require('electron')
 
 export default class Details extends React.Component {
@@ -13,26 +14,30 @@ export default class Details extends React.Component {
       <Container fluid key={this.props.train.trainId}>
         <Row>
           <Col xs={1}>
-            <DropdownButton title={'Train ' + this.props.train.trainId} size='sm' style={{ marginBottom: 10 + 'px' }}>
-              {this.props.trains.map((t) => (t.trainId !== this.props.train.trainId) ? (<Dropdown.Item key={t.trainId} onClick={() => { ipcRenderer.send('selectTrain', t.trainId) }}>Train {t.trainId}</Dropdown.Item>) : '')}
+            <DropdownButton title={'Train ' + this.props.train.trainId + (this.props.train.hardware ? ' (HW)' : '')} size='sm' style={{ marginBottom: 10 + 'px' }}>
+              {this.props.trains.map((t) => (t.trainId !== this.props.train.trainId) ? (<Dropdown.Item key={t.trainId} onClick={() => { ipcRenderer.send('selectTrain', t.trainId) }}>Train {t.trainId}{t.hardware ? ' (HW)' : ''}</Dropdown.Item>) : '')}
             </DropdownButton>
           </Col>
         </Row>
         <Row>
-          <Col xl={testMode ? 3 : 6} md={6}>
+          <Col md={5}>
             <Stack>
               <TrainStateCard trainState={this.props.train.state} />
-              <EmergencyBrakeCard ebrake={this.props.train.user.emergencyBrake} />
+              <CommsCard train={this.props.train} />
             </Stack>
           </Col>
-          <Col xl={testMode ? 3 : 6} md={6}>
+          <Col md={5}>
             <Stack>
               <FailureControlCard user={this.props.train.user} />
+              <EmergencyBrakeCard ebrake={this.props.train.user.emergencyBrake} />
               <VehicleDataCard vehicle={this.props.train.vehicle} />
             </Stack>
           </Col>
-          {testMode ? <TestCards controller={this.props.train.controllerIntf} trackmodel={this.props.train.trackIntf} /> : ''}
+          <Col md={2}>
+            <Ads />
+          </Col>
         </Row>
+        <Row />
       </Container>
     )
   }

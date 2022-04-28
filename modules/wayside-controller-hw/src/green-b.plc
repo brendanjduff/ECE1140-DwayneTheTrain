@@ -1,0 +1,9 @@
+ld oc39
+ld oc141
+or
+st lt6
+
+ld oc48
+ld oc132
+or
+st 0t7

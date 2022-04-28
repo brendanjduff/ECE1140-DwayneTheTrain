@@ -1,6 +1,7 @@
 import React from 'react'
 import { Card, Row, Col, InputGroup, Button, Form, FormControl } from 'react-bootstrap'
 import SmartTextInput from './SmartTextInput'
+import { msToMph } from './UnitConversion'
 const { ipcRenderer } = window.require('electron')
 
 export default class InputCardTrackModel extends React.Component {
@@ -21,18 +22,18 @@ export default class InputCardTrackModel extends React.Component {
           <Card.Text>
             <Row className='noVertical'>
               <Col xs={6} className='noVertical'>
-                Sugg. Speed
+                Cmd. Speed
               </Col>
               <Col xs={6} className='noVertical'>
                 <InputGroup size='sm' style={{ padding: 1 + 'px' }}>
-                  <SmartTextInput default={this.props.io.speedCmd} channel='setSpeedCmd' validate={/^([0-9]*([.]([0-9])+)?)$/} />
+                  <SmartTextInput default={msToMph(this.props.io.speedCmd)} channel='setSpeedCmd' validate={/^([0-9]*([.]([0-9])+)?)$/} />
                   <InputGroup.Text>mph</InputGroup.Text>
                 </InputGroup>
               </Col>
             </Row>
             <Row className='noVertical'>
               <Col xs={6} className='noVertical'>
-                Authority
+                Cmd. Authority
               </Col>
               <Col xs={6} className='noVertical'>
                 <InputGroup size='sm' style={{ padding: 1 + 'px' }}>
@@ -43,7 +44,7 @@ export default class InputCardTrackModel extends React.Component {
             </Row>
             <Row className='noVertical'>
               <Col xs={6} className='noVertical'>
-                Grade
+                Block Grade
               </Col>
               <Col xs={6} className='noVertical'>
                 <InputGroup size='sm' style={{ padding: 1 + 'px' }}>

@@ -1,0 +1,53 @@
+ld oc73
+ld oc105
+or
+st lt10
+
+ld oc77
+st lt11
+
+ld oc88
+st lt12
+
+ld oc97
+st lt13
+
+ld oc77
+st sw2
+
+ld oc85
+not
+st sw3
+
+ld oc77
+ld oc78
+ld oc79
+ld oc80
+ld oc81
+ld oc82
+ld oc83
+ld oc84
+ld oc85
+or
+or
+or
+or
+or
+or
+or
+or
+st im2
+
+ld im2
+not
+st mo4
+
+ld im2
+ld oc98
+ld oc99
+ld oc100
+or
+or
+or
+not
+st mo3

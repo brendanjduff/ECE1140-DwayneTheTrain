@@ -11,6 +11,11 @@ rules.push({
   use: [{ loader: 'style-loader' }, { loader: 'css-loader' }]
 })
 
+rules.push({
+  test: /\.png$/,
+  use: [{ loader: 'url-loader?limit=8192' }]
+})
+
 module.exports = {
   // Put your normal webpack config below here
   module: {
