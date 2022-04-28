@@ -82,6 +82,8 @@ class TrackLine {
   setTemp(num){
     this.envTemp = num
   }
+
+
 }
 
 class Block{
@@ -292,7 +294,7 @@ class Train {
     this.boardingPax = 0
   }
 
-  updatePosition(dx) {
+  updatePositionG(dx) {
     this.position += dx
     if (this.position > greenLine.blocks[this.block].length) {
       this.position -= greenLine.blocks[this.block].length
@@ -332,9 +334,56 @@ class Train {
       this.underground = false
     }
   }
-  updatePassengers(pax, max, deboard) {
+  updatePositionR(dx) {
+    this.position += dx
+    if (this.position > redLine.blocks[this.block].length) {
+      this.position -= redLine.blocks[this.block].length
+      //check switch
+      if(redLine.blocks[this.block].hasSwitch) {
+        if(this.direction = redLine.switches[this.block].edir) {
+          this.direction = redLine.switches[this.block].getNextDir(this.block)
+          this.block = redLine.switches[this.block].getNextBlock(this.block)
+        }
+        else if (this.direction) {
+          this.direction = redLine.blocks[this.block].nextDirF
+          this.block = redLine.blocks[this.block].nextBlockF
+        }
+        else {
+          this.direction = redLine.blocks[this.block].nextDirR
+          this.block = redLine.blocks[this.block].nextBlockR
+        }
+      }
+      else if (this.direction) {
+        this.direction = redLine.blocks[this.block].nextDirF
+        this.block = redLine.blocks[this.block].nextBlockF
+      }
+      else {
+        this.direction = redLine.blocks[this.block].nextDirR
+        this.block = redLine.blocks[this.block].nextBlockR
+      }
+    }
+    if (redLine.blocks[this.block].hasBeacon) {
+      this.station = redLine.blocks[this.block].beacon.station
+      this.underground = redLine.blocks[this.block].beacon.underground
+      this.leftPlatform = redLine.blocks[this.block].beacon.leftPlatform
+      this.rightPlatform = redLine.blocks[this.block].beacon.rightPlatform
+    } else {
+      this.station = ''
+      this.leftPlatform = false
+      this.rightPlatform = false
+      this.underground = false
+    }
+  }
+  updatePassengersG(pax, max, deboard) {
     if(max > 0) {
       this.boardingPax = Math.min(greenLine.stations[this.block].sellTix(), max);
+    } else {
+      this.boardingPax = 0;
+    }
+  }
+  updatePassengersR(pax, max, deboard) {
+    if(max > 0) {
+      this.boardingPax = Math.min(redLine.stations[this.block].sellTix(), max);
     } else {
       this.boardingPax = 0;
     }
@@ -384,10 +433,10 @@ input.on('trainModel', (m, data) => {
   })
   data.forEach((t) => {
     const id = t.id
-    trainsDictRed[id].updatePosition(t['distance'])
-    trainsDictRed[id].updatePassengers(t['passengers'], t['maxBoardingPax'], t['deboardingPax'])
-    trainsDictGreen[id].updatePosition(t['distance'])
-    trainsDictGreen[id].updatePassengers(t['passengers'], t['maxBoardingPax'], t['deboardingPax'])
+    trainsDictRed[id].updatePositionR(t['distance'])
+    trainsDictRed[id].updatePassengersR(t['passengers'], t['maxBoardingPax'], t['deboardingPax'])
+    trainsDictGreen[id].updatePositionG(t['distance'])
+    trainsDictGreen[id].updatePassengersG(t['passengers'], t['maxBoardingPax'], t['deboardingPax'])
   })
   trainsList.forEach((t) => {
     greenLine.blocks[t.block].isOccupied = true
@@ -411,7 +460,7 @@ input.on('createTrain', (m, data) => {
 
 ipcMain.on('requestData', (event, arg) => { event.reply('fetchData', { ready: true, greenLine: greenLine, redLine: redLine }) })
 ipcMain.on('EnvironmentTemp',(event,arg) => {greenLine.setTemp(arg);redLine.setTemp(arg)})
-ipcMain.on('toggleRail',(event,arg)=>{greenLine.blocks[arg-1].toggleRail()})
+ipcMain.on('toggleRail',(event,arg)=>{greenLine.blocks[arg-1].toggleRail();redLine.blocks[arg-1].toggleRail()})
 ipcMain.on('toggleCircuit',(event,arg)=>{greenLine.blocks[arg-1].toggleCircuit()})
 ipcMain.on('togglePower',(event,arg)=>{greenLine.blocks[arg-1].togglePower()})
 setInterval(() => { watchdog.shout('trackModel', true) }, 100)
